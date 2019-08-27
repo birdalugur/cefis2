@@ -1,0 +1,7 @@
+__pycache__/
+.vscode/
+.ipynb_checkpoints/
+.gitattributes
+auxiliary_functions.ipynb
+new_model.ipynb
+run.ipynb
