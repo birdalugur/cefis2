@@ -7,6 +7,7 @@
 import pandas as pd
 import glob
 import datetime
+import os
 
 
 # In[ ]:
@@ -356,7 +357,7 @@ def find_spread(mid_price,a_PNLTICK,a_TICKSIZE, b_PNLTICK,b_TICKSIZE):
     btick = b_PNLTICK/b_TICKSIZE
     size = len(a_series)
     spread = size*[0]
-    for i in range(size):        
+    for i in range(size):
         try:
             spread[i+1] = (((a_series[i+1] - a_series[i])*atick) - ((b_series[i+1] - b_series[i])*btick)) +spread[i]    
         except:
@@ -383,9 +384,17 @@ def element_counts(series,first=None,last=None):
 # In[ ]:
 
 
-def write_excel(df,file_name,folder):
-    writer = pd.ExcelWriter('C:\\Users\\ugur.eren\\Python Codes\\cefis2\\out\\'+folder+'\\'+file_name+'.xlsx', engine='xlsxwriter')
-    df.to_excel(writer, sheet_name='Sheet1')
+def write_excel(path,df,file_name,folder,prod_name):
+    directory_path = path+folder+'\\'+prod_name + '\\'
+    if not os.path.exists(directory_path):
+        os.mkdir(directory_path)
+        if not os.path.exists(directory_path+'detail\\'):
+            os.mkdir(directory_path+'detail\\') 
+       
+    print(directory_path)
+    writer = pd.ExcelWriter(directory_path+ file_name+'.xlsx', engine='xlsxwriter')
+    df.to_excel(writer, sheet_name='Sheet1')       
+    
     writer.save()
 
 

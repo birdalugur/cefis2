@@ -34,7 +34,8 @@ class GunlukVeri:
     #eslesmis_info: tuple
     saatik_data: list
     tarih: datetime.date
-    time: List[pd.Series] = field(default_factory=list)
+    name: str
+    time: List[pd.Series] = field(default_factory=list)    
     spread: List[pd.Series] = field(default_factory=list)
     change: List[pd.Series] = field(default_factory=list)
     duration: List[pd.Series] = field(default_factory=list)
@@ -99,7 +100,7 @@ def to_match_hour(info1,info2):
         d = {'time': info1.hourly_data[i].time,
              info1.date.strftime('%m/%d/%Y_')+info1.product : info1.hourly_data[i].mid_price,
              info2.date.strftime('%m/%d/%Y_')+info2.product : info2.hourly_data[i].mid_price }        
-        saatlik.append(pd.DataFrame(data=d))
+        saatlik.append(pd.DataFrame(data=d).reset_index(drop=True))
     return saatlik
 
 
