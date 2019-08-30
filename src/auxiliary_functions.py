@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[3]:
 
 
 import pandas as pd
@@ -61,124 +61,6 @@ def combine_date(time_series,date):
     for time in list_time:
         date_list.append(pd.Timestamp.combine(date,time))
     return pd.Series(data=date_list)     
-
-
-# In[ ]:
-
-
-def find_sign(value):
-    """değişimin hangi yönde olduğunu kontrol eder
-    Parameters:
-        value (float) : amplitude değeri
-    Returns:
-        int: pozitif ise 1, negatif ise -1 aksi durumda 0 döndürür.
-    """
-    if value>0:
-        return 1
-    elif value<0:
-        return -1
-    else:
-        return 0
-
-
-# In[ ]:
-
-
-def get_conditon(df_line, min_duration=None, min_amplitude=None):
-    """Satırdaki verilerin, verilen koşulu sağlayıp sağlamadığını kontol eder.
-    Parameters:
-        df_line (Series) : dataframe'e ait bir satır
-        min_duration (float) : geçerli sayılabilecek dur. değeri
-        min_amplitude (float) : geçerli sayılabilecek amp. boyutu
-    Returns:
-        boolean: koşul sağlanıyorsa True, sağlanmıyorsa False
-    """
-    if min_amplitude == None:
-        if df_line['duration'] <= min_duration:
-            return True
-        else:
-            return False
-    else:
-        if df_line['duration'] <= min_duration and abs(df_line['amplitude']) <= min_amplitude:
-            return True
-        else:
-            return False
-
-
-# In[ ]:
-
-
-def conditionally_scan(df,min_dur,min_amp=None):
-    """Bir dataframe'i verilen koşullara göre yeniden düzenler.
-    Parameters:
-        df (dataframe): pd.Dataframe nesnesi
-        min_dur (int): 
-        min_amp (float):
-    Returns:
-        pd.Dataframe:
-    Example:
-        min_duratin=1, min_amplitude=30 olarak verildiğini varsayalım. 3sn'lik ve -40 amp. sahip
-        negatif bir dalgayı takip eden, 1sn'lik ve amplitude değeri 25 olan pozitif bir dalga var ise,
-        bu dalgayı önceki dalgaya dahil eder yeni değer dur=4sn amp=-15 olur ve bir sonraki dalganın
-        koşulu sağlayıp sağlamadığını kontrol eder. Sağlanıyorsa aynı işlem devam eder. Sağlanmıyorsa veriler kaydedilerek
-        bir sonraki dalga için işlemler tekrar yapılır ve diğer dalga hesaplanır.
-    """
-    df=df[['duration','amplitude']].dropna()
-    index = 0
-    cout = 1
-    time_list  = []
-    dur_list =[]
-    amp_list = []     
-    dlist = []
-    alist=[]
-    first = True
-    second = True
-    while(cout<len(df)):
-        current_dur = df.iloc[index,:]['duration']
-        current_amp = df.iloc[index,:]['amplitude']
-        current_sign = find_sign(current_amp)
-        
-        second = True
-        while(second and cout<len(df)+1):
-            try:
-                next_sign = find_sign(df.iloc[cout,:]['amplitude'])     
-                
-                if (next_sign == current_sign) or next_sign == 0 :
-                    dur_list.append(df.iloc[cout,:]['duration'])
-                    amp_list.append(df.iloc[cout,:]['amplitude'])
-                    cout+=1
-                    
-                else:
-                    if get_conditon(df.iloc[cout,:],min_dur,min_amp):
-                        dur_list.append(df.iloc[cout,:]['duration'])
-                        amp_list.append(df.iloc[cout,:]['amplitude'])
-                        cout+=1
-                        
-                    else:                    
-                        dur_list.append(df.iloc[index,:]['duration'])
-                        amp_list.append(df.iloc[index,:]['amplitude'])
-                        index = cout
-                        time_list.append(df.index[cout-1])
-                        cout=cout+1
-                        dlist.append(sum(dur_list))
-                        alist.append(sum(amp_list))
-                        dur_list.clear()
-                        amp_list.clear()
-                        second = False
-            except:
-                print("Sonraki işaret mevcut değil")
-                print("Son dalga ",index,".satırda başladı ve ",cout, "satırda son buldu")
-                dur_list.append(df.iloc[index,:]['duration'])
-                amp_list.append(df.iloc[index,:]['amplitude'])
-                dlist.append(sum(dur_list))
-                alist.append(sum(amp_list))
-                time_list.append(df.index[cout-1])
-                second = False
-            
-        
-    new_df = pd.DataFrame({'duration':dlist,'amplitude':alist},index=time_list)
-    return new_df
-                    
 
 
 # In[ ]:
@@ -357,7 +239,7 @@ def find_spread(mid_price,a_PNLTICK,a_TICKSIZE, b_PNLTICK,b_TICKSIZE):
     btick = b_PNLTICK/b_TICKSIZE
     size = len(a_series)
     spread = size*[0]
-    for i in range(size):
+    for i in range(size):        
         try:
             spread[i+1] = (((a_series[i+1] - a_series[i])*atick) - ((b_series[i+1] - b_series[i])*btick)) +spread[i]    
         except:
@@ -384,17 +266,14 @@ def element_counts(series,first=None,last=None):
 # In[ ]:
 
 
-def write_excel(path,df,file_name,folder,prod_name):
-    directory_path = path+folder+'\\'+prod_name + '\\'
+def write_excel(path,df,file_name,prod_name):
+    directory_path = path+'\\'+prod_name + '\\'
     if not os.path.exists(directory_path):
         os.mkdir(directory_path)
         if not os.path.exists(directory_path+'detail\\'):
-            os.mkdir(directory_path+'detail\\') 
-       
-    print(directory_path)
+            os.mkdir(directory_path+'detail\\')
     writer = pd.ExcelWriter(directory_path+ file_name+'.xlsx', engine='xlsxwriter')
-    df.to_excel(writer, sheet_name='Sheet1')       
-    
+    df.to_excel(writer, sheet_name='Sheet1')
     writer.save()
 
 
@@ -436,16 +315,4 @@ def split_df(df,hour=1):
         count+=1
     #df_list[count]= df_list[count].append(df[start:82801])
     return df_list  
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
 
