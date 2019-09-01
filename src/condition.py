@@ -52,7 +52,7 @@ def get_conditon(df_line, min_duration=None, min_amplitude=None):
 # In[3]:
 
 
-def conditionally_scan(df,min_dur,min_amp=5):
+def _conditionally_scan(df,min_dur,min_amp=5):
     """Bir dataframe'i verilen koşullara göre yeniden düzenler.
     Parameters:
         df (dataframe): pd.Dataframe nesnesi
@@ -80,8 +80,7 @@ def conditionally_scan(df,min_dur,min_amp=5):
     while(cout<len(df)):
         current_dur = df.iloc[index,:]['duration']
         current_amp = df.iloc[index,:]['amplitude']
-        current_sign = find_sign(current_amp)
-        
+        current_sign = find_sign(current_amp)       
 
         second = True
         while(second and cout<len(df)+1):
@@ -92,8 +91,6 @@ def conditionally_scan(df,min_dur,min_amp=5):
                 second = False
             try:
                 next_sign = find_sign(df.iloc[cout,:]['amplitude'])
-                # print("******************************************************************")
-                # print("İşaretler -> ","CurrentSign: ",current_sign," nextSign: ",next_sign)
 
                 if (next_sign == current_sign) or next_sign == 0 :
                     dur_list.append(df.iloc[cout,:]['duration'])
@@ -101,15 +98,12 @@ def conditionally_scan(df,min_dur,min_amp=5):
                     cout+=1
                     
                 else:
-                    # print(get_conditon(df.iloc[cout,:],min_dur,min_amp))
                     if get_conditon(df.iloc[cout,:],min_dur,min_amp):
                         dur_list.append(df.iloc[cout,:]['duration'])
                         amp_list.append(df.iloc[cout,:]['amplitude'])
                         cout+=1
                         
-                    else:
-                        # print("Count: ", cout, "index: ", index)     
-                        # print("------------------------------------------------------")          
+                    else:      
                         dur_list.append(df.iloc[index,:]['duration'])
                         amp_list.append(df.iloc[index,:]['amplitude'])
                         index = cout
@@ -121,9 +115,6 @@ def conditionally_scan(df,min_dur,min_amp=5):
                         amp_list.clear()
                         second = False
             except:
-                
-                # print("Sonraki işaret mevcut değil")
-                # print("Son dalga ",index,".satırda başladı ve ",cout, "satırda son buldu")
                 dur_list.append(df.iloc[index,:]['duration'])
                 amp_list.append(df.iloc[index,:]['amplitude'])
                 dlist.append(sum(dur_list))
@@ -139,21 +130,21 @@ def conditionally_scan(df,min_dur,min_amp=5):
 
 
 def scan(df):
-    """
+    """Medyana göre dalgaları yeniden düzenler
     Parameters:
         df(pd.Dataframe): alt dataframe'ler içeren bir dataframe
     Returns:
-        
+        pd.Dataframe: pd.concat([df,df..])
     """
     df_list = []
-    main_index = df.index.levels[0].tolist()
+    main_index = df.index.levels[0].tolist()    
     for index in main_index:
-        df_list.append(conditionally_scan(df.loc[index],1,5))
-        if index == time(18):
-            # print(df.loc[index])
-            # print(conditionally_scan(df.loc[index],1))
+        current_df = df.loc[index]
+        df_list.append(_conditionally_scan(df=current_df,min_dur=current_df.duration.median()))
         
     combin_df = pd.concat(df_list,keys=main_index)
-    # print(main_index)
     return combin_df
 
+
+
+#%%
