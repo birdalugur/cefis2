@@ -92,8 +92,8 @@ def conditionally_scan(df,min_dur,min_amp=5):
                 second = False
             try:
                 next_sign = find_sign(df.iloc[cout,:]['amplitude'])
-                print("******************************************************************")
-                print("İşaretler -> ","CurrentSign: ",current_sign," nextSign: ",next_sign)
+                # print("******************************************************************")
+                # print("İşaretler -> ","CurrentSign: ",current_sign," nextSign: ",next_sign)
 
                 if (next_sign == current_sign) or next_sign == 0 :
                     dur_list.append(df.iloc[cout,:]['duration'])
@@ -101,15 +101,15 @@ def conditionally_scan(df,min_dur,min_amp=5):
                     cout+=1
                     
                 else:
-                    print(get_conditon(df.iloc[cout,:],min_dur,min_amp))
+                    # print(get_conditon(df.iloc[cout,:],min_dur,min_amp))
                     if get_conditon(df.iloc[cout,:],min_dur,min_amp):
                         dur_list.append(df.iloc[cout,:]['duration'])
                         amp_list.append(df.iloc[cout,:]['amplitude'])
                         cout+=1
                         
                     else:
-                        print("Count: ", cout, "index: ", index)     
-                        print("------------------------------------------------------")          
+                        # print("Count: ", cout, "index: ", index)     
+                        # print("------------------------------------------------------")          
                         dur_list.append(df.iloc[index,:]['duration'])
                         amp_list.append(df.iloc[index,:]['amplitude'])
                         index = cout
@@ -122,8 +122,8 @@ def conditionally_scan(df,min_dur,min_amp=5):
                         second = False
             except:
                 
-                print("Sonraki işaret mevcut değil")
-                print("Son dalga ",index,".satırda başladı ve ",cout, "satırda son buldu")
+                # print("Sonraki işaret mevcut değil")
+                # print("Son dalga ",index,".satırda başladı ve ",cout, "satırda son buldu")
                 dur_list.append(df.iloc[index,:]['duration'])
                 amp_list.append(df.iloc[index,:]['amplitude'])
                 dlist.append(sum(dur_list))
@@ -150,10 +150,10 @@ def scan(df):
     for index in main_index:
         df_list.append(conditionally_scan(df.loc[index],1,5))
         if index == time(18):
-            print(df.loc[index])
-            print(conditionally_scan(df.loc[index],1))
+            # print(df.loc[index])
+            # print(conditionally_scan(df.loc[index],1))
         
     combin_df = pd.concat(df_list,keys=main_index)
-    print(main_index)
+    # print(main_index)
     return combin_df
 

@@ -258,7 +258,7 @@ def element_counts(series,first=None,last=None):
         last(int):bakılacak aralığın bitiş değeri
     """
     if (first==None) and (last==None):
-        return series.value_counts()
+        return pd.DataFrame(series.value_counts())
     else:
         return series[first:last].value_counts()
 

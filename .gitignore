@@ -4,7 +4,6 @@ __pycache__/
 .gitattributes
 auxiliary_functions.ipynb
 new_model.ipynb
-run.ipynb
 condition.ipynb
 out/
 data/
