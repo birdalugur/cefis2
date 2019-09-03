@@ -78,3 +78,44 @@ def to_match_hour(info1,info2):
         saatlik.append(pd.DataFrame(data=d).reset_index(drop=True))
     return saatlik
 
+
+
+# In[ ]:
+def get_all_data(full_data):
+    """tüm duration df'lerini birleştirir. tüm amp. df'lerini birleştirir. sonra bu ikisini birleştirip döndürür.
+    **part_** : **i**.saate ait spread,dur,amp.. verileri(*1.gün+2.gün+3.gün*..) birleştiriliyor <br>
+    daha sonra *part_* ile başlayan listelerden **df** oluşturuluyor<br>
+    oluşturulan **df**'ler **full_** prefix'e sahip listelere atılıyor.
+    Parameters:
+        full_data (list): GunlukVeri orneklerinin bir listesi
+    Returns:
+        dataframe: 
+    """
+    full_duration = []
+    full_amplitude = []
+    hour_series = pd.date_range('2018-01-01-18', periods=23, freq='H')
+    hour_series = hour_series.time
+    
+    for hour in range(23):
+        part_duration = []
+        part_amplitude = []
+        
+        for data in full_data:
+            part_duration.extend(data.duration[hour])
+            part_amplitude.extend(data.amplitude[hour])
+        
+        df_amp = pd.DataFrame(part_amplitude)
+        df_amp = df_amp.reset_index(drop=True)        
+        current_index = full_data[0].time[hour]
+        full_amplitude.append(df_amp)
+        
+        df_dur = pd.DataFrame(part_duration).transpose()
+        df_dur = df_dur.reset_index(drop=True)        
+        current_index = full_data[0].time[hour]
+        full_duration.append(df_dur.transpose())
+    dur = pd.concat(objs=full_duration,keys=hour_series)
+    amp = pd.concat(objs=full_amplitude,keys=hour_series)
+    df = pd.concat([dur,amp],axis=1)
+    df.columns=['duration','amplitude']
+    df = df.dropna()
+    return df

@@ -316,3 +316,12 @@ def split_df(df,hour=1):
     #df_list[count]= df_list[count].append(df[start:82801])
     return df_list  
 
+
+
+# In[ ]:
+def get_detail(df):
+    detail_list = []
+    time_list= df.index.levels[0].tolist()
+    for t in time_list:
+        detail_list.append(df.loc[t].describe())
+    return pd.concat(detail_list,keys=time_list)
