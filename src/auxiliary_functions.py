@@ -73,36 +73,42 @@ def find_change(data):
     Returns:
         pandas.Series: Değişim miktarının sıralı bir listesi
     """
-    size = len(data)
-    change_list = size*[None]
-    count=0
-    while(count<=size):
-        try:
-            change = ((-1)*(data[count]))+data[count+1]
-            change_list[count+1]=change
-            count+=1
-        except:
-            break
-    series = pd.Series(data=change_list,index=data.index,name='change')    
-    return series
+    # size = len(data)
+    # change_list = size*[None]
+    # count=0
+    # while(count<=size):
+    #     try:
+    #         change = ((-1)*(data[count]))+data[count+1]
+    #         change_list[count+1]=change
+    #         count+=1
+    #     except:
+    #         break
+    # series = pd.Series(data=change_list,index=data.index,name='change').dropna()   
+    # return series
+    # data = data.diff()
+    # data = data.reset_index(drop=True)
+    df = pd.np.trim_zeros(data.diff().dropna())
+    df.name="change"
+    return df
 
 
 # In[4]:
 
 
 def find_duration(data):
-    """Değişimin süresini hesaplar
+    """ (+),(-) yönde ya da sabit bir dalganın süresini hesaplar
     Parameters:
-        data (pandas.Series): (+),(-) yönde ya da sabit bir dalganın süresini hesaplar
+        data (pandas.Series): change
     Returns:
         pd.Series: Her bir yönde gerçekleşen değişimin süresi
     """
+    data = data.dropna()
     size = len(data)
     dur_list = size*[None]
     sign_negativ =0
     sign_positive=0
-    sign_zero=0
-    for i in range(1,size+1):
+    #sign_zero=0
+    for i in range(0,size+1):
         try:
             change = data.iat[i]
             if change is None:
@@ -113,42 +119,47 @@ def find_duration(data):
             else:
                 if sign_negativ>0:
                     dur_list[i-1] = sign_negativ
-                elif sign_zero>0:
-                    dur_list[i-1] = sign_zero
+                else:
+                    continue
+                # elif sign_zero>0:
+                #     dur_list[i-1] = sign_zero
         if change<0:
-            if (sign_positive==0 and sign_negativ==0 and sign_zero==0) or (sign_positive==0 and sign_negativ>0):
+            if (sign_positive==0 and sign_negativ==0 ) or (sign_positive==0 and sign_negativ>0):
                 sign_negativ+=1
             if sign_positive>0:
                 dur_list[i-1]=sign_positive
                 sign_positive=0
                 sign_negativ+=1
-            if sign_zero>0:
-                dur_list[i-1]=sign_zero
-                sign_zero=0
+            # if sign_zero>0:
+            #     dur_list[i-1]=sign_zero
+            #     sign_zero=0
+            #     sign_negativ+=1
+        elif change>0:
+            if (sign_negativ==0 and sign_positive==0 ) or (sign_negativ==0 and sign_positive>0):
+                sign_positive+=1
+            if sign_negativ>0:
+                dur_list[i-1]=sign_negativ
+                sign_negativ=0
+                sign_positive+=1
+            # if sign_zero>0:
+            #     dur_list[i-1]=sign_zero
+            #     sign_zero=0
+            #     sign_positive+=1
+        else:
+            if sign_negativ>0:
+                # dur_list[i-1]=sign_negativ
+                # sign_negativ=0
+                # sign_zero+=1
                 sign_negativ+=1
-        if change>0:
-            if (sign_negativ==0 and sign_positive==0 and sign_zero==0) or (sign_negativ==0 and sign_positive>0):
-                sign_positive+=1
-            if sign_negativ>0:
-                dur_list[i-1]=sign_negativ
-                sign_negativ=0
-                sign_positive+=1
-            if sign_zero>0:
-                dur_list[i-1]=sign_zero
-                sign_zero=0
-                sign_positive+=1
-        if change == 0:
-            if sign_negativ>0:
-                dur_list[i-1]=sign_negativ
-                sign_negativ=0
-                sign_zero+=1
             elif sign_positive>0:
-                dur_list[i-1]=sign_positive
-                sign_positive=0
-                sign_zero+=1
+                sign_positive+=1
+                # dur_list[i-1]=sign_positive
+                # sign_positive=0
+                # sign_zero+=1
             else:
-                sign_zero+=1
-    series = pd.Series(data=dur_list,name='duration',index=data.index)
+                continue
+            
+    series = pd.Series(data=dur_list,name='duration',index=data.index).dropna()
     return series
         
 
@@ -167,12 +178,13 @@ def find_amplitude(change_data, duration_data):
     size = len(duration_data)
     amplitude_list = size*[None]
     amplitude = 0
-    count = 1
+    count = duration_data.index[0]
     index = 0
     i = 0
     while(i<size):
         if not (pd.np.isnan(duration_data.iat[i])):
             index = duration_data.iat[i] + count
+            print("index: ",index," - count: ", count)
             for value in change_data[int(count):int(index)]:                
                 try:
                     amplitude+=value
@@ -243,7 +255,9 @@ def find_spread(mid_price,a_PNLTICK,a_TICKSIZE, b_PNLTICK,b_TICKSIZE):
         try:
             spread[i+1] = (((a_series[i+1] - a_series[i])*atick) - ((b_series[i+1] - b_series[i])*btick)) +spread[i]    
         except:
+            print("haata")
             pass
+    #return pd.np.trim_zeros(pd.Series(data=spread,index=a_series.index,name='spread'))
     return pd.Series(data=spread,index=a_series.index,name='spread')
 
 
@@ -325,3 +339,84 @@ def get_detail(df):
     for t in time_list:
         detail_list.append(df.loc[t].describe())
     return pd.concat(detail_list,keys=time_list)
+
+
+# In[ ]:
+def find_duramp(data):
+    """ (+),(-) yönde ya da sabit bir dalganın süresini hesaplar
+    Parameters:
+        data (pandas.Series): change
+    Returns:
+        pd.Series: Her bir yönde gerçekleşen değişimin süresi
+    """
+    data = data.dropna()
+    size = len(data)
+    dur_list = size*[None]
+    amp_list = size*[None]
+    sign_negativ =0
+    sign_positive=0
+    amplitude = 0
+    #sign_zero=0
+    for i in range(0,size+1):
+        try:
+            change = data.iat[i]
+            # if change is None:
+            #     change = 0
+        except:
+            if sign_positive>0:
+                dur_list[i-1] = sign_positive
+                amp_list[i-1] = amplitude
+            else:
+                if sign_negativ>0:
+                    dur_list[i-1] = sign_negativ
+                else:
+                    continue
+                # elif sign_zero>0:
+                #     dur_list[i-1] = sign_zero
+        if change<0:
+            if (sign_positive==0 and sign_negativ==0 ) or (sign_positive==0 and sign_negativ>0):
+                sign_negativ+=1
+                amplitude +=change
+            if sign_positive>0:
+                amp_list[i-1]=amplitude
+                dur_list[i-1]=sign_positive
+                sign_positive=0
+                sign_negativ+=1
+                amplitude=change
+
+            # if sign_zero>0:
+            #     dur_list[i-1]=sign_zero
+            #     sign_zero=0
+            #     sign_negativ+=1
+        elif change>0:
+            if (sign_negativ==0 and sign_positive==0 ) or (sign_negativ==0 and sign_positive>0):
+                amplitude+=change
+                sign_positive+=1
+            if sign_negativ>0:
+                amp_list[i-1]=amplitude
+                dur_list[i-1]=sign_negativ
+                sign_negativ=0
+                sign_positive+=1
+                amplitude=change
+            # if sign_zero>0:
+            #     dur_list[i-1]=sign_zero
+            #     sign_zero=0
+            #     sign_positive+=1
+        else:
+            if sign_negativ>0:
+                # dur_list[i-1]=sign_negativ
+                # sign_negativ=0
+                # sign_zero+=1
+                sign_negativ+=1
+            elif sign_positive>0:
+                sign_positive+=1
+                # dur_list[i-1]=sign_positive
+                # sign_positive=0
+                # sign_zero+=1
+            else:
+                continue
+            
+    series_dur = pd.Series(data=dur_list,name='duration',index=data.index).dropna()
+    series_amp = pd.Series(data=amp_list,name='amplitude',index=data.index).dropna()
+    return pd.DataFrame(data=[series_dur,series_amp]).transpose()
+        

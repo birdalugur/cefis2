@@ -52,7 +52,7 @@ def get_conditon(df_line, min_duration=None, min_amplitude=None):
 # In[3]:
 
 
-def _conditionally_scan(df,min_dur,min_amp=5):
+def _conditionally_scan(df,min_dur,min_amp=None):
     """Bir dataframe'i verilen koşullara göre yeniden düzenler.
     Parameters:
         df (dataframe): pd.Dataframe nesnesi
@@ -85,10 +85,11 @@ def _conditionally_scan(df,min_dur,min_amp=5):
         second = True
         while(second and cout<len(df)+1):
             if(current_sign==0):
-                dur_list.append(df.iloc[index,:]['duration'])
-                index = cout                        
-                cout=cout+1
-                second = False
+                # dur_list.append(df.iloc[index,:]['duration'])
+                # index = cout                        
+                # cout=cout+1
+                # second = False
+                continue
             try:
                 next_sign = find_sign(df.iloc[cout,:]['amplitude'])
 

@@ -16,10 +16,9 @@ from typing import List
 
 
 @dataclass
-class GunlukVeri:    
-    #eslesmis_info: tuple
-    saatik_data: list
-    tarih: datetime.date
+class DailyData:
+    mid_price_list: list
+    date: datetime.date
     name: str
     time: List[pd.Series] = field(default_factory=list)
     spread: List[pd.Series] = field(default_factory=list)
@@ -30,15 +29,18 @@ class GunlukVeri:
         
     def spread_hesapla(self):
         for i in range(23):
-            self.time.append(self.saatik_data[i]['time'])
-            self.spread.append(aux.find_spread((self.saatik_data[i].iloc[:,1],self.saatik_data[i].iloc[:,2]),a_PNLTICK=10,a_TICKSIZE=0.0001,b_PNLTICK=6.25,b_TICKSIZE=0.0001))
+            self.time.append(self.mid_price_list[i]['time'])
+            self.spread.append(aux.find_spread((self.mid_price_list[i].iloc[:,1],self.mid_price_list[i].iloc[:,2]),a_PNLTICK=10,a_TICKSIZE=0.0001,b_PNLTICK=6.25,b_TICKSIZE=0.0001))
             self.change.append(aux.find_change(self.spread[i]))
             self.duration.append(aux.find_duration(self.change[i]))
             self.amplitude.append(aux.find_amplitude(self.change[i],self.duration[i]))
         
         
     def get_df(self,hour_slice):
-        return pd.DataFrame(data=[self.spread[hour_slice],self.change[hour_slice],self.duration[hour_slice],self.amplitude[hour_slice]])
+        return pd.DataFrame(data=[self.spread[hour_slice],self.change[hour_slice],self.duration[hour_slice],self.amplitude[hour_slice]]).transpose()
+
+
+    
 
 
 # In[ ]:
@@ -68,7 +70,7 @@ def to_match_hour(info1,info2):
     Parameters:
         info1, info2 (Info) :
     Returns:
-        list: mid_price içeren saatlik df listesi
+        list: mid_price içeren saatlik df listesi (23 df [time,mid_price,mid_price])
     """
     saatlik =[]
     for i in range(23):
@@ -87,7 +89,7 @@ def get_all_data(full_data):
     daha sonra *part_* ile başlayan listelerden **df** oluşturuluyor<br>
     oluşturulan **df**'ler **full_** prefix'e sahip listelere atılıyor.
     Parameters:
-        full_data (list): GunlukVeri orneklerinin bir listesi
+        full_data (list): DailyData orneklerinin bir listesi
     Returns:
         dataframe: 
     """
@@ -119,3 +121,7 @@ def get_all_data(full_data):
     df.columns=['duration','amplitude']
     df = df.dropna()
     return df
+
+
+def divide(df):
+    return {'pozitive':df[df['amplitude']>0],'negative':df[df['amplitude']<0]}
