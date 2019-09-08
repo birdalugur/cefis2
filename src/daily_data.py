@@ -23,8 +23,9 @@ class DailyData:
     time: List[pd.Series] = field(default_factory=list)
     spread: List[pd.Series] = field(default_factory=list)
     change: List[pd.Series] = field(default_factory=list)
-    duration: List[pd.Series] = field(default_factory=list)
-    amplitude: List[pd.Series] = field(default_factory=list)
+    duramp: List[pd.DataFrame] = field(default_factory=list)
+    # duration: List[pd.Series] = field(default_factory=list)
+    # amplitude: List[pd.Series] = field(default_factory=list)
     df: pd.DataFrame = field(default=pd.DataFrame)
         
     def spread_hesapla(self):
@@ -32,12 +33,12 @@ class DailyData:
             self.time.append(self.mid_price_list[i]['time'])
             self.spread.append(aux.find_spread((self.mid_price_list[i].iloc[:,1],self.mid_price_list[i].iloc[:,2]),a_PNLTICK=10,a_TICKSIZE=0.0001,b_PNLTICK=6.25,b_TICKSIZE=0.0001))
             self.change.append(aux.find_change(self.spread[i]))
-            self.duration.append(aux.find_duration(self.change[i]))
-            self.amplitude.append(aux.find_amplitude(self.change[i],self.duration[i]))
+            self.duramp.append(aux.find_duramp(self.change[i]))
+        #    self.amplitude.append(aux.find_amplitude(self.change[i],self.duration[i]))
         
         
     def get_df(self,hour_slice):
-        return pd.DataFrame(data=[self.spread[hour_slice],self.change[hour_slice],self.duration[hour_slice],self.amplitude[hour_slice]]).transpose()
+        return pd.DataFrame(data=[self.spread[hour_slice],self.change[hour_slice],self.duramp.duration[hour_slice],self.duramp.amplitude[hour_slice]]).transpose()
 
 
     
@@ -103,8 +104,8 @@ def get_all_data(full_data):
         part_amplitude = []
         
         for data in full_data:
-            part_duration.extend(data.duration[hour])
-            part_amplitude.extend(data.amplitude[hour])
+            part_duration.extend(data.duramp[hour].duration)
+            part_amplitude.extend(data.duramp[hour].amplitude)
         
         df_amp = pd.DataFrame(part_amplitude)
         df_amp = df_amp.reset_index(drop=True)        
@@ -124,4 +125,4 @@ def get_all_data(full_data):
 
 
 def divide(df):
-    return {'pozitive':df[df['amplitude']>0],'negative':df[df['amplitude']<0]}
+    return {'pozitive':df[df['amplitude']>0].median(),'negative':df[df['amplitude']<0].median()}

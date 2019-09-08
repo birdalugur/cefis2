@@ -6,6 +6,7 @@
 
 import pandas as pd
 from datetime import time
+import src.daily_data as dt
 
 # In[ ]:
 
@@ -43,7 +44,7 @@ def get_conditon(df_line, min_duration=None, min_amplitude=None):
         else:
             return False
     else:
-        if df_line['duration'] <= min_duration and abs(df_line['amplitude']) <= min_amplitude:
+        if df_line['duration'] <= min_duration and abs(df_line['amplitude']) <= abs(min_amplitude):
             return True
         else:
             return False
@@ -52,7 +53,7 @@ def get_conditon(df_line, min_duration=None, min_amplitude=None):
 # In[3]:
 
 
-def _conditionally_scan(df,min_dur,min_amp=None):
+def _conditionally_scan(df,medyan):
     """Bir dataframe'i verilen koşullara göre yeniden düzenler.
     Parameters:
         df (dataframe): pd.Dataframe nesnesi
@@ -67,6 +68,8 @@ def _conditionally_scan(df,min_dur,min_amp=None):
         koşulu sağlayıp sağlamadığını kontrol eder. Sağlanıyorsa aynı işlem devam eder. Sağlanmıyorsa veriler kaydedilerek
         bir sonraki dalga için işlemler tekrar yapılır ve diğer dalga hesaplanır.
     """
+    min_dur = None
+    min_amp=None
     df=df[['duration','amplitude']].dropna()
     index = 0
     cout = 1
@@ -78,18 +81,19 @@ def _conditionally_scan(df,min_dur,min_amp=None):
     first = True
     second = True
     while(cout<len(df)):
-        current_dur = df.iloc[index,:]['duration']
+        current_dur = df.iloc[index,:]['duration']        
         current_amp = df.iloc[index,:]['amplitude']
-        current_sign = find_sign(current_amp)       
+        current_sign = find_sign(current_amp)
+
+        if current_sign==1:
+            min_dur = medyan['pozitive'].duration
+            min_amp = medyan['pozitive'].amplitude
+        else:
+            min_dur = medyan['negative'].duration
+            min_amp = medyan['negative'].amplitude
 
         second = True
         while(second and cout<len(df)+1):
-            if(current_sign==0):
-                # dur_list.append(df.iloc[index,:]['duration'])
-                # index = cout                        
-                # cout=cout+1
-                # second = False
-                continue
             try:
                 next_sign = find_sign(df.iloc[cout,:]['amplitude'])
 
@@ -100,11 +104,14 @@ def _conditionally_scan(df,min_dur,min_amp=None):
                     
                 else:
                     if get_conditon(df.iloc[cout,:],min_dur,min_amp):
+                        
                         dur_list.append(df.iloc[cout,:]['duration'])
                         amp_list.append(df.iloc[cout,:]['amplitude'])
                         cout+=1
                         
                     else:      
+                        print("count: ", cout," -index: ",index)
+                        print("d",min_dur,"a",min_amp)
                         dur_list.append(df.iloc[index,:]['duration'])
                         amp_list.append(df.iloc[index,:]['amplitude'])
                         index = cout
@@ -121,7 +128,7 @@ def _conditionally_scan(df,min_dur,min_amp=None):
                 dlist.append(sum(dur_list))
                 alist.append(sum(amp_list))
                 time_list.append(df.index[cout-1])
-                second = False            
+                second = False
         
     new_df = pd.DataFrame({'duration':dlist,'amplitude':alist},index=time_list)
     return new_df
@@ -141,7 +148,8 @@ def scan(df):
     main_index = df.index.levels[0].tolist()    
     for index in main_index:
         current_df = df.loc[index]
-        df_list.append(_conditionally_scan(df=current_df,min_dur=current_df.duration.median()))
+        current_medyan = dt.divide(current_df)
+        df_list.append(_conditionally_scan(df=current_df,medyan=current_medyan))
         
     combin_df = pd.concat(df_list,keys=main_index)
     return combin_df

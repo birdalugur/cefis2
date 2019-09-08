@@ -255,7 +255,6 @@ def find_spread(mid_price,a_PNLTICK,a_TICKSIZE, b_PNLTICK,b_TICKSIZE):
         try:
             spread[i+1] = (((a_series[i+1] - a_series[i])*atick) - ((b_series[i+1] - b_series[i])*btick)) +spread[i]    
         except:
-            print("haata")
             pass
     #return pd.np.trim_zeros(pd.Series(data=spread,index=a_series.index,name='spread'))
     return pd.Series(data=spread,index=a_series.index,name='spread')
