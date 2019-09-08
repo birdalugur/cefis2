@@ -154,6 +154,3 @@ def scan(df):
     combin_df = pd.concat(df_list,keys=main_index)
     return combin_df
 
-
-
-#%%

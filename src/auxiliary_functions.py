@@ -67,135 +67,16 @@ def combine_date(time_series,date):
 
 
 def find_change(data):
-    """Ardışık veriler arasındaki değişim miktarını hesaplar.
+    """Ardışık veriler arasındaki değişim miktarını hesaplar
+       baştaki ve sondaki sıfırları ve Nan'ları kaldırır.
     Parameters:
         data (pandas.Series): Hesaplanacak veri
     Returns:
         pandas.Series: Değişim miktarının sıralı bir listesi
-    """
-    # size = len(data)
-    # change_list = size*[None]
-    # count=0
-    # while(count<=size):
-    #     try:
-    #         change = ((-1)*(data[count]))+data[count+1]
-    #         change_list[count+1]=change
-    #         count+=1
-    #     except:
-    #         break
-    # series = pd.Series(data=change_list,index=data.index,name='change').dropna()   
-    # return series
-    # data = data.diff()
-    # data = data.reset_index(drop=True)
+    """    
     df = pd.np.trim_zeros(data.diff().dropna())
     df.name="change"
     return df
-
-
-# In[4]:
-
-
-def find_duration(data):
-    """ (+),(-) yönde ya da sabit bir dalganın süresini hesaplar
-    Parameters:
-        data (pandas.Series): change
-    Returns:
-        pd.Series: Her bir yönde gerçekleşen değişimin süresi
-    """
-    data = data.dropna()
-    size = len(data)
-    dur_list = size*[None]
-    sign_negativ =0
-    sign_positive=0
-    #sign_zero=0
-    for i in range(0,size+1):
-        try:
-            change = data.iat[i]
-            if change is None:
-                change = 0
-        except:
-            if sign_positive>0:
-                dur_list[i-1] = sign_positive
-            else:
-                if sign_negativ>0:
-                    dur_list[i-1] = sign_negativ
-                else:
-                    continue
-                # elif sign_zero>0:
-                #     dur_list[i-1] = sign_zero
-        if change<0:
-            if (sign_positive==0 and sign_negativ==0 ) or (sign_positive==0 and sign_negativ>0):
-                sign_negativ+=1
-            if sign_positive>0:
-                dur_list[i-1]=sign_positive
-                sign_positive=0
-                sign_negativ+=1
-            # if sign_zero>0:
-            #     dur_list[i-1]=sign_zero
-            #     sign_zero=0
-            #     sign_negativ+=1
-        elif change>0:
-            if (sign_negativ==0 and sign_positive==0 ) or (sign_negativ==0 and sign_positive>0):
-                sign_positive+=1
-            if sign_negativ>0:
-                dur_list[i-1]=sign_negativ
-                sign_negativ=0
-                sign_positive+=1
-            # if sign_zero>0:
-            #     dur_list[i-1]=sign_zero
-            #     sign_zero=0
-            #     sign_positive+=1
-        else:
-            if sign_negativ>0:
-                # dur_list[i-1]=sign_negativ
-                # sign_negativ=0
-                # sign_zero+=1
-                sign_negativ+=1
-            elif sign_positive>0:
-                sign_positive+=1
-                # dur_list[i-1]=sign_positive
-                # sign_positive=0
-                # sign_zero+=1
-            else:
-                continue
-            
-    series = pd.Series(data=dur_list,name='duration',index=data.index).dropna()
-    return series
-        
-
-
-# In[ ]:
-
-
-def find_amplitude(change_data, duration_data):
-    """
-    Parameters:
-        change_data (pd.Series): Spread değeri kullanılarak hesaplanmış change serisi
-        duration_data (pd.Series): Change verisi kullanılarak hesaplanmış duration serisi
-    Returns:
-        pd.Series:
-    """
-    size = len(duration_data)
-    amplitude_list = size*[None]
-    amplitude = 0
-    count = duration_data.index[0]
-    index = 0
-    i = 0
-    while(i<size):
-        if not (pd.np.isnan(duration_data.iat[i])):
-            index = duration_data.iat[i] + count
-            print("index: ",index," - count: ", count)
-            for value in change_data[int(count):int(index)]:                
-                try:
-                    amplitude+=value
-                except:
-                    amplitude+=0
-            amplitude_list[i]=amplitude
-            amplitude=0
-            count=index
-        i+=1
-    series = pd.Series(data=amplitude_list,name='amplitude',index=duration_data.index)
-    return series
 
 
 # In[ ]:
@@ -256,7 +137,7 @@ def find_spread(mid_price,a_PNLTICK,a_TICKSIZE, b_PNLTICK,b_TICKSIZE):
             spread[i+1] = (((a_series[i+1] - a_series[i])*atick) - ((b_series[i+1] - b_series[i])*btick)) +spread[i]    
         except:
             pass
-    #return pd.np.trim_zeros(pd.Series(data=spread,index=a_series.index,name='spread'))
+        
     return pd.Series(data=spread,index=a_series.index,name='spread')
 
 
@@ -315,18 +196,15 @@ def split_df(df,hour=1):
     Returns:
         list: Saatlik olarak bölünmüş df'lerin bir listesi."""
     start=0
-#     stop=hour
     stop = 3600
     loop=int(23/hour)
     df_list=[pd.DataFrame()]*loop
     count=0    
     while count<loop:
-#         df_list[count]= df_list[count].append(df[datetime.time(start):datetime.time(stop)])
         df_list[count]= df_list[count].append(df[start:stop])
         start=stop
         stop+=3600
         count+=1
-    #df_list[count]= df_list[count].append(df[start:82801])
     return df_list  
 
 
@@ -358,9 +236,7 @@ def find_duramp(data):
     #sign_zero=0
     for i in range(0,size+1):
         try:
-            change = data.iat[i]
-            # if change is None:
-            #     change = 0
+            change = data.iat[i]            
         except:
             if sign_positive>0:
                 dur_list[i-1] = sign_positive
@@ -370,8 +246,7 @@ def find_duramp(data):
                     dur_list[i-1] = sign_negativ
                 else:
                     continue
-                # elif sign_zero>0:
-                #     dur_list[i-1] = sign_zero
+                
         if change<0:
             if (sign_positive==0 and sign_negativ==0 ) or (sign_positive==0 and sign_negativ>0):
                 sign_negativ+=1
@@ -383,10 +258,6 @@ def find_duramp(data):
                 sign_negativ+=1
                 amplitude=change
 
-            # if sign_zero>0:
-            #     dur_list[i-1]=sign_zero
-            #     sign_zero=0
-            #     sign_negativ+=1
         elif change>0:
             if (sign_negativ==0 and sign_positive==0 ) or (sign_negativ==0 and sign_positive>0):
                 amplitude+=change
@@ -397,21 +268,11 @@ def find_duramp(data):
                 sign_negativ=0
                 sign_positive+=1
                 amplitude=change
-            # if sign_zero>0:
-            #     dur_list[i-1]=sign_zero
-            #     sign_zero=0
-            #     sign_positive+=1
         else:
             if sign_negativ>0:
-                # dur_list[i-1]=sign_negativ
-                # sign_negativ=0
-                # sign_zero+=1
                 sign_negativ+=1
             elif sign_positive>0:
                 sign_positive+=1
-                # dur_list[i-1]=sign_positive
-                # sign_positive=0
-                # sign_zero+=1
             else:
                 continue
             
