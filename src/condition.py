@@ -109,9 +109,7 @@ def _conditionally_scan(df,medyan):
                         amp_list.append(df.iloc[cout,:]['amplitude'])
                         cout+=1
                         
-                    else:      
-                        print("count: ", cout," -index: ",index)
-                        print("d",min_dur,"a",min_amp)
+                    else:
                         dur_list.append(df.iloc[index,:]['duration'])
                         amp_list.append(df.iloc[index,:]['amplitude'])
                         index = cout
