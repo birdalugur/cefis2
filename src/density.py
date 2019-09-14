@@ -28,10 +28,22 @@ class Density:
         """
         return pd.pivot_table(df, values='density', index=['duration'],columns='amplitude',margins=True)
     
-    def dagilim_hesapla(self):
-        df_piv_d = self.marginal_distribution.drop('All',axis=1)
-        distribution_of_duration = (df_piv_d.iloc[:-1]/ df_piv_d.iloc[-1]).stack().to_frame('marginal_distribution')
-        return distribution_of_duration
+    def get_distribution(self, choice):
+        """Koşullu dağılımı döndürür
+        """
+        if choice == 'duration':
+            df_piv_d = self.marginal_distribution.drop('All',axis=1)
+            distribution_of_duration = (df_piv_d.iloc[:-1]/ df_piv_d.iloc[-1]).stack().to_frame('marginal_distribution')
+            return distribution_of_duration
+
+        elif choice == 'amplitude':
+            df_piv_a = self.marginal_distribution.transpose().drop('All',axis=1)
+            distribution_of_amplitude = (df_piv_a.iloc[:-1]/ df_piv_a.iloc[-1]).stack().to_frame('marginal_distribution')
+            return distribution_of_amplitude.swaplevel(0,1,axis=0).sort_index()
+
+        else:
+            raise Exception("choice, 'duration' ya da 'amplitude' olarak ayarlanmalıdır'")
+        
 
     
     def draw(self):
