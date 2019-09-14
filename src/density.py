@@ -11,9 +11,28 @@ class Density:
         self.density_data = self._calc_density()
         
     def _calc_density(self):
-        df = self.data.groupby(self.data.columns.tolist()).size().reset_index().                rename(columns={0:'density'})
+        df = self.data.groupby(self.data.columns.tolist()).size().reset_index().rename(columns={0:'density'})
         df['density'] = df['density']/df['density'].sum()
         return df
+    
+    @property
+    def marginal_distribution(self):
+        """Marjinal dağılımı döndürür."""
+        return self.create_pivot(self.density_data)
+
+    @staticmethod
+    def create_pivot(df):
+        """Bu method density, duration ve amplitude verileri içeren bir
+            DataFrame'in pivot tablosunu oluşturur. Tablo, aynı zamanda
+            density değerlerinin satır ve sütun toplamlarını da içerir.
+        """
+        return pd.pivot_table(df, values='density', index=['duration'],columns='amplitude',margins=True)
+    
+    def dagilim_hesapla(self):
+        df_piv_d = self.marginal_distribution.drop('All',axis=1)
+        distribution_of_duration = (df_piv_d.iloc[:-1]/ df_piv_d.iloc[-1]).stack().to_frame('marginal_distribution')
+        return distribution_of_duration
+
     
     def draw(self):
         df = self.density_data
@@ -43,6 +62,8 @@ class Density:
                         b=10, t=10)
                       )
         return fig
+
+    
 
 
 # ## Usage
