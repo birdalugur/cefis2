@@ -97,7 +97,7 @@ def combine_df(frames,dates):
 # In[1]:
 
 
-def find_arithmeticMean(name, *args):
+def find_arithmeticMean(*args):
     """verilerin aritmetik ortalamasını hesaplar ve döndürür.
     Parameters:
         name(str): Hesaplama sonrası üretilecek seriye verilecek isim. örn: 'p_6A'
@@ -107,35 +107,31 @@ def find_arithmeticMean(name, *args):
     """
     
     number=len(args)
-    return pd.Series(data=sum(args)/number,name=name,index=args[0].index) 
-
+    seri = pd.Series(data=sum(args)/number) 
+    seri=seri.reset_index(drop=True)
+    return seri
 
 # In[1]:
 
 
-def find_spread(mid_price,a_PNLTICK,a_TICKSIZE, b_PNLTICK,b_TICKSIZE):
+def find_spread(a_series,b_series,values):
     """6A ve 6B verisinden SPREAD verisini üretir.
     Parameters:
         mid_price(tuple):
-        a_series(pd.Series): 6A sütunundaki veriler
-        b_series(pd.Series): 6B sütunundaki veriler
-        a_PNLTICK(float): 6A'ya ait PNLTICK değeri
-        a_TICKSIZE(float): 6A'ya ait TICKSIZE değeri
-        b_PNLTICK(float): 6B'ye ait PNLTICK değeri
-        b_TICKSIZE(float): BA'ya ait TICKSIZE değeri
+        values(dict): ticksize değerleri
     Returns:
         pd.Series: Hesaplanmış spread verisi
     """
-    a_series=mid_price[0]
-    b_series=mid_price[1]
-    atick = a_PNLTICK/a_TICKSIZE
-    btick = b_PNLTICK/b_TICKSIZE
+    atick = values['a_PNLTICK']/values['a_TICKSIZE']
+    btick = values['b_PNLTICK']/values['b_TICKSIZE']
     size = len(a_series)
+    print('size:',size)
     spread = size*[0]
-    for i in range(size):        
+    print(len(spread))
+    for i in range(size): 
         try:
-            spread[i+1] = (((a_series[i+1] - a_series[i])*atick) - ((b_series[i+1] - b_series[i])*btick)) +spread[i]    
-        except:
+            spread[i+1] = (((a_series.iat[i+1] - a_series.iat[i])*atick) - ((b_series.iat[i+1] - b_series.iat[i])*btick)) +spread[i] 
+        except:            
             pass
         
     return pd.Series(data=spread,index=a_series.index,name='spread')
