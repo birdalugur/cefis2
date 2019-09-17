@@ -125,15 +125,12 @@ def find_spread(a_series,b_series,values):
     atick = values['a_PNLTICK']/values['a_TICKSIZE']
     btick = values['b_PNLTICK']/values['b_TICKSIZE']
     size = len(a_series)
-    print('size:',size)
     spread = size*[0]
-    print(len(spread))
     for i in range(size): 
         try:
             spread[i+1] = (((a_series.iat[i+1] - a_series.iat[i])*atick) - ((b_series.iat[i+1] - b_series.iat[i])*btick)) +spread[i] 
         except:            
-            pass
-        
+            pass        
     return pd.Series(data=spread,index=a_series.index,name='spread')
 
 
