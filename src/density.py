@@ -7,7 +7,7 @@ import numpy as np
 
 
 class Density:
-    def __init__(self, dataframe):
+    def __init__(self, dataframe = None):
         self.data = dataframe
         self.density_data = self._calc_density()
 
