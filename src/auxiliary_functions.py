@@ -177,29 +177,7 @@ def combin_date_and_time(time_series,date):
     """
     return datetime.datetime.combine(date,time_series)
 
-
-# In[1]:
-
-
-def split_df(df,hour=1):
-    """Verileri 1er saatlik dilimlere böler(23 ayrı df).
-    Parameters:
-        df (dataframe):
-        hour (int): varsayılan olarak 1. Gelecekte, asal olmayan saatlik veri için değiştirilebilir.
-    Returns:
-        list: Saatlik olarak bölünmüş df'lerin bir listesi."""
-    start=0
-    stop = 3600
-    loop=int(23/hour)
-    df_list=[pd.DataFrame()]*loop
-    count=0    
-    while count<loop:
-        df_list[count]= df_list[count].append(df[start:stop])
-        start=stop
-        stop+=3600
-        count+=1
-    return df_list  
-
+ 
 
 
 # In[ ]:
