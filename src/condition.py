@@ -135,10 +135,10 @@ def _conditionally_scan(df,medyan):
 # In[7]:
 
 
-def scan(df):
+def group_scan(df):
     """Medyana göre dalgaları yeniden düzenler
     Parameters:
-        df(pd.Dataframe): alt dataframe'ler içeren bir dataframe
+        df(pd.Dataframe): medyan koşulu konularak yeniden düzenlenecek veri grubu
     Returns:
         pd.Dataframe: pd.concat([df,df..])
     """
@@ -152,3 +152,13 @@ def scan(df):
     combin_df = pd.concat(df_list,keys=main_index)
     return combin_df
 
+#%%
+def single_scan(df):
+    """Medyana göre dalgaları yeniden düzenler
+    Parameters:
+        df(pd.Dataframe): medyan koşulu konularak yeniden düzenlenecek veri
+    Returns:
+        pd.Dataframe: pd.concat([df,df..])
+    """
+    medyan = dt.divide(df)
+    return _conditionally_scan(df=df,medyan=medyan)
