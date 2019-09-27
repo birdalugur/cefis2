@@ -38,7 +38,7 @@ class DailyData:
         
         
     def get_df(self,hour_slice):
-        return pd.DataFrame(data=[self.spread[hour_slice],self.change[hour_slice],self.duramp.duration[hour_slice],self.duramp.amplitude[hour_slice]]).transpose()
+        return pd.DataFrame(data=[self.spread[hour_slice],self.change[hour_slice],self.duramp[hour_slice].duration,self.duramp[hour_slice].amplitude]).transpose()
 
 
     

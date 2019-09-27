@@ -97,7 +97,7 @@ def combine_df(frames,dates):
 # In[1]:
 
 
-def find_arithmeticMean(name, *args):
+def find_arithmeticMean(*args):
     """verilerin aritmetik ortalamasını hesaplar ve döndürür.
     Parameters:
         name(str): Hesaplama sonrası üretilecek seriye verilecek isim. örn: 'p_6A'
@@ -107,7 +107,7 @@ def find_arithmeticMean(name, *args):
     """
     
     number=len(args)
-    return pd.Series(data=sum(args)/number,name=name,index=args[0].index) 
+    return pd.Series(data=sum(args)/number,index=args[0].index) 
 
 
 # In[1]:

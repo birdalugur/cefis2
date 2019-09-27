@@ -43,7 +43,7 @@ def get_info(path):
 def __calc_mp(hourly_data):
     i=0
     for data in hourly_data:
-        mp = aux.find_arithmeticMean("self.product",data.bid_price, data.ask_price)
+        mp = aux.find_arithmeticMean(data.bid_price, data.ask_price)
         hourly_data[i]['mid_price'] = mp
         i+=1
     return hourly_data
