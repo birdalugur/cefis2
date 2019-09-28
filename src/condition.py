@@ -6,7 +6,6 @@
 
 import pandas as pd
 from datetime import time
-import src.daily_data as dt
 
 # In[ ]:
 
@@ -146,7 +145,7 @@ def group_scan(df):
     main_index = df.index.levels[0].tolist()    
     for index in main_index:
         current_df = df.loc[index]
-        current_medyan = dt.divide(current_df)
+        current_medyan = divide(current_df)
         df_list.append(_conditionally_scan(df=current_df,medyan=current_medyan))
         
     combin_df = pd.concat(df_list,keys=main_index)
@@ -160,5 +159,10 @@ def single_scan(df):
     Returns:
         pd.Dataframe: pd.concat([df,df..])
     """
-    medyan = dt.divide(df)
+    medyan = divide(df)
     return _conditionally_scan(df=df,medyan=medyan)
+
+
+#%%
+def divide(df):
+    return {'pozitive':df[df['amplitude']>0].median(),'negative':df[df['amplitude']<0].median()}

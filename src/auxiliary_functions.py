@@ -1,53 +1,25 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 # In[3]:
-
-
 import pandas as pd
 import glob
 import datetime
 import os
 
-
-# In[ ]:
-
-
-def get_path(dir_path):
-    """
-    @type dir_path: str
-    @param dir_path: okunacak klasöre ait path
-    @rtype: list
-    @returns: Belirtilen klasördeki excel dosyalarına ait yolun bir listesini döndürür.
-    """
-
-    files = [f for f in glob.glob(dir_path + "**/*.xlsx", recursive=True)]
-    return files
-
-
-# In[ ]:
-
-
-def get_date(file_path):
-    """Tarih bilgisini dosya adından ayrıştırır ve döndürür
+#%%
+def split_df(df,hour):
+    """Verileri 1er saatlik dilimlere böler(23 ayrı df).
     Parameters:
-        file_path (str) : .xlsx dosyasına ait path
+        df (dataframe):
+        hour (int): varsayılan olarak 1. Gelecekte, asal olmayan saatlik veri için değiştirilebilir.
     Returns:
-        Timestamp: dataya ait tarih bilgisi
-    """
-    date_list = file_path.split('\\')[-1].split('.')[0].split('_')[0:3]
-    date = str()
-    for y in date_list:
-        if date_list.index(y) != 2:
-            date = date + str(y) + '.'
-        else:
-            date = date + str(y)
-    return pd.Timestamp(date)
+        list: Saatlik olarak bölünmüş df'lerin bir listesi."""
+    return np.array_split(df.drop(df.index[len(df)-1]),hour)
+
+#%%
+def get_mid_price(frame):
+    return aux.find_arithmeticMean(frame.bid_price, frame.ask_price)
 
 
-# In[ ]:
-
-
+#%%
 def combine_date(time_series,date):
     """tarih ve saat bilgisini birleştirip series olarak döndürür.
     Parameters:
@@ -133,60 +105,6 @@ def find_spread(a_series,b_series,values):
             pass        
     return pd.Series(data=spread,index=a_series.index,name='spread')
 
-
-# In[ ]:
-
-
-def element_counts(series,first=None,last=None):
-    """hangi değerden kaç adet olduğunu döndürür.
-    Parameters:
-        series(pd.Series): incelenecek seri
-        first(int):bakılacak aralığın başlangıç değeri
-        last(int):bakılacak aralığın bitiş değeri
-    """
-    if (first==None) and (last==None):
-        return pd.DataFrame(series.value_counts())
-    else:
-        return series[first:last].value_counts()
-
-
-# In[ ]:
-
-
-def write_excel(path,df,file_name,prod_name):
-    directory_path = path+'\\'+prod_name + '\\'
-    if not os.path.exists(directory_path):
-        os.mkdir(directory_path)
-        if not os.path.exists(directory_path+'detail\\'):
-            os.mkdir(directory_path+'detail\\')
-    writer = pd.ExcelWriter(directory_path+ file_name+'.xlsx', engine='xlsxwriter')
-    df.to_excel(writer, sheet_name='Sheet1')
-    writer.save()
-
-
-# In[2]:
-
-
-def combin_date_and_time(time_series,date):
-    """Bu fonksiyon, pd.Series.apply() metodundan çağrılmalı.
-    Parameters
-        time_series (pd.Series):
-        date (datetime.date):
-    Returns
-        datetime.datetime
-    """
-    return datetime.datetime.combine(date,time_series)
-
- 
-
-
-# In[ ]:
-def get_detail(df):
-    detail_list = []
-    time_list= df.index.levels[0].tolist()
-    for t in time_list:
-        detail_list.append(df.loc[t].describe())
-    return pd.concat(detail_list,keys=time_list)
 
 
 # In[ ]:
