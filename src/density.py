@@ -9,8 +9,8 @@ class Density:
         self.density_data = self._calc_density()
 
     def _calc_density(self):
-        df = self.data.groupby(self.data.columns.tolist()).size(
-        ).reset_index().rename(columns={0: 'density'})
+        df = self.data.groupby(self.data.columns.tolist()).size()\
+            .reset_index().rename(columns={0: 'density'})
         df['density'] = df['density']/df['density'].sum()
         return df
 
