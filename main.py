@@ -118,5 +118,4 @@ if __name__ == '__main__':
 
     for pair in pairs:
         print("dosyaya yazılıyor: ",pair)
-        io.write()
         edited_data[pair].to_csv(pair+".csv")
