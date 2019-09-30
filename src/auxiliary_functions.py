@@ -3,7 +3,6 @@ import pandas as pd
 import glob
 import datetime
 import os
-import numpy as np
 
 #%%
 def split_df(df,hour):
@@ -17,7 +16,7 @@ def split_df(df,hour):
 
 #%%
 def get_mid_price(frame):
-    return find_arithmeticMean(frame.bid_price, frame.ask_price)
+    return aux.find_arithmeticMean(frame.bid_price, frame.ask_price)
 
 
 #%%
