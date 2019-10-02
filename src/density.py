@@ -1,6 +1,7 @@
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
+from dataclasses import dataclass
 
 
 class Density:
@@ -15,9 +16,10 @@ class Density:
         return df
 
     @property
-    def marginal_distribution(self):
+    def marginal_density(self):
         """Marjinal dağılımı döndürür."""
         return self.create_pivot(self.density_data)
+        
 
     @staticmethod
     def create_pivot(df):
@@ -25,22 +27,40 @@ class Density:
             DataFrame'in pivot tablosunu oluşturur. Tablo, aynı zamanda
             density değerlerinin satır ve sütun toplamlarını da içerir.
         """
-        return pd.pivot_table(df, values='density', index=['duration'], columns='amplitude', margins=True)
+        pivot = pd.pivot_table(df, values='density', index=['duration'], columns='amplitude')        
+        horizontal_total = pivot.agg('sum',axis=1)        
+        pivot['sum'] = horizontal_total
+        vertical_total=pivot.agg('sum')
+        vertical_total.name = 'sum'
+        pivot = pivot.append(vertical_total)
+        return pivot
+
 
     def get_distribution(self, choice):
         """Koşullu dağılımı döndürür
         """
-        if choice == 'duration':
-            df_piv_d = self.marginal_distribution.drop('All', axis=1)
-            distribution_of_duration = (
-                df_piv_d.iloc[:-1] / df_piv_d.iloc[-1]).stack().to_frame('conditional_distribution')
-            return distribution_of_duration
+        @dataclass
+        class Gosterim:
+            normal:pd.DataFrame
+            pivot:pd.DataFrame
+        
+        if choice == 'amplitude':
+            df_piv_d = self.marginal_density.drop('sum', axis=1)
+            #distribution_of_duration = (
+             #   df_piv_d.iloc[:-1] / df_piv_d.iloc[-1]).stack().to_frame('conditional_distribution')
+            distribution_of_pivot = df_piv_d.iloc[:-1] / df_piv_d.iloc[-1]
+            distribution_of_amplitude = distribution_of_pivot.stack().to_frame('conditional_distribution')
+            return Gosterim(distribution_of_amplitude,distribution_of_pivot)
+            #return distribution_of_duration
 
-        elif choice == 'amplitude':
-            df_piv_a = self.marginal_distribution.transpose().drop('All', axis=1)
-            distribution_of_amplitude = (
-                df_piv_a.iloc[:-1] / df_piv_a.iloc[-1]).stack().to_frame('conditional_distribution')
-            return distribution_of_amplitude.swaplevel(0, 1, axis=0).sort_index()
+        elif choice == 'duration':
+            df_piv_a = self.marginal_density.transpose().drop('sum', axis=1)
+            # distribution_of_amplitude = (
+            #     df_piv_a.iloc[:-1] / df_piv_a.iloc[-1]).stack().to_frame('conditional_distribution')
+            distribution_of_pivot = df_piv_a.iloc[:-1] / df_piv_a.iloc[-1]
+            distribution_of_duration = distribution_of_pivot.stack().to_frame('conditional_distribution').swaplevel(0, 1, axis=0).sort_index()
+            return Gosterim(distribution_of_duration,distribution_of_pivot.transpose())
+            #return distribution_of_amplitude.swaplevel(0, 1, axis=0).sort_index()
 
         else:
             raise Exception(

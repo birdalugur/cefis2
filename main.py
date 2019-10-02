@@ -118,4 +118,6 @@ if __name__ == '__main__':
 
     for pair in pairs:
         print("dosyaya yazılıyor: ",pair)
-        edited_data[pair].to_csv(pair+".csv")
+        df = edited_data[pair].reset_index()
+        df.columns=['time_period','time','duration','amplitude']
+        df.to_csv(pair+".csv")
