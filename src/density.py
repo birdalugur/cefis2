@@ -127,8 +127,19 @@ def draw_2d(df,axis='y'):
         all_amplitude = df.index.get_level_values(0).unique()
         for amp in all_amplitude:
             current = df.loc[amp]
-            fig = px.line(current.reset_index(), x='duration', y='conditional_distribution',title= "amplitude: " + str(amp))
+            fig = px.line(current.reset_index(), x='duration', y='conditional_distribution',\
+                         title= "amplitude: " + str(amp))
             fig.show()
+            
+    elif axis == 'x':
+        all_duration = df.index.get_level_values(0).unique()
+        for dur in all_duration:
+            current = df.loc[dur]
+            fig = px.line(current.reset_index(), x='amplitude', y='conditional_distribution',title= "duration: " + str(dur))
+            fig.show()
+    
+    else:
+        raise ValueError('Geçersiz eksen değeri')
 
 # ## Usage
 
