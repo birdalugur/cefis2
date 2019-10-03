@@ -49,7 +49,7 @@ class Density:
             #distribution_of_duration = (
              #   df_piv_d.iloc[:-1] / df_piv_d.iloc[-1]).stack().to_frame('conditional_distribution')
             distribution_of_pivot = df_piv_d.iloc[:-1] / df_piv_d.iloc[-1]
-            distribution_of_amplitude = distribution_of_pivot.stack().to_frame('conditional_distribution')
+            distribution_of_amplitude = distribution_of_pivot.stack().to_frame('conditional_distribution').normal.swaplevel(0,1).sort_index()
             return Gosterim(distribution_of_amplitude,distribution_of_pivot)
             #return distribution_of_duration
 
