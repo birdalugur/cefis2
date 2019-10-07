@@ -8,7 +8,8 @@ from dataclasses import dataclass
 class Density:
     def __init__(self, dataframe):
         self.data = dataframe
-        self.__data_range = None
+        self.__first_range = None
+        self.__second_range = None
 
         self.frequency = self.get_frequency(self.data)
         self.density_data = self._calc_density()
@@ -29,7 +30,7 @@ class Density:
     
     # Aralık Uygulama İşlemleri----------------------------------------------------------------------
 
-    def __create_range(self,series):
+    def __intervals(self,series):
         """Serinin, min ve max değeri arasında eşit aralıklı sayıları döndür.
         """
         min_s = series.min()-0.0000000001
@@ -38,30 +39,52 @@ class Density:
 
     
     def get_current_range(self):
-        """Nesnenin varsayılan aralığını döndürür.
+        """Nesnenin, eksenlere göre varsayılan aralığını döndürür.
+        >>> obj = Density(data_of_6A_6B_U8)
+        >>> obj.get_current_range()
+        
+        | 0 | 1       | 2          | 3          | 4          | ... | 87  |
+        |---|---------|------------|------------|------------|-----|-----|
+        | 0 | 1.000   | 5.191919   | 9.383838   | 13.575758  | ... | 326 |
+        | 1 | -13.125 | -12.784091 | -12.443182 | -12.102273 | ... | 29  |
+        
         """
-        return self.__data_range
+        return pd.DataFrame([self.__first_range,self.__second_range])
 
 
-    def set_range(self, incoming_range=None):
+    def set_range(self, range_method='intervals', defined_range = None):
         """Mevcut nesneye bir aralık ataması yapmak için kullanılır.
+        yalnızca range_method 'other' değeri aldığında defined_range parametresi tanımlanmalıdır.
         
         Parameters
         ----------
-        incoming_range : numpy.ndarray, default None
-            Nesneye atanacak aralık        
+        range_method  : str 
+            aralık oluşturma yöntemi. 'intervals', 'width' ve 'other' olabilir.
+
+        defined_range : numpy.ndarray, default None. 
+            Nesneye atanacak, daha önceden tanımlanmış aralık. 
+
+        Examples
+        --------
+        >>> obj = Density(data_of_6A_6B_U8)
+        >>> obj.set_range(range_method='intervals')
+        >>> range_df = obj.convert_range()
         """
-        if incoming_range == None:
-            self.data_range = self.__create_range(self.data)
+        if range_method == 'intervals':
+            self.__first_range = self.__intervals(self.data.duration)
+            self.__second_range = self.__intervals(self.data.amplitude)
+
+        elif range_method == 'width':
+            pass
 
         else:
-            self.data_range = incoming_range
+            pass
         
-    def convert_range(self,dataframe):
+    def convert_range(self):
         """Bir DataFrame'e belirli aralık değerleri uygulayarak yeniden düzenler.
         """
-        range_dur = pd.cut(x=dataframe.duration, bins= self.__create_range(dataframe.duration))
-        range_amp = pd.cut(x=dataframe.amplitude, bins= self.__create_range(dataframe.amplitude))
+        range_dur = pd.cut(x=self.data.duration, bins= self.__first_range)
+        range_amp = pd.cut(x=self.data.amplitude, bins= self.__second_range)
         return pd.concat([range_dur,range_amp],axis=1)
 
     #-------------------------------------------------------------------------------------------------
