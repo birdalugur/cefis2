@@ -8,14 +8,63 @@ from dataclasses import dataclass
 class Density:
     def __init__(self, dataframe):
         self.data = dataframe
+        self.__data_range = None
+
+        self.frequency = self.get_frequency(self.data)
         self.density_data = self._calc_density()
         self.joint_density = self.density_data.pivot(index='duration',columns='amplitude',values='density')
 
+    @staticmethod
+    def get_frequency(df):
+        """Bir veri setindeki sayıların hangi sıklıkla yer aldığını döndürür.
+        """
+        df = df.groupby(df.columns.tolist()).size()\
+            .reset_index().rename(columns={0: 'frequency'})
+        return df        
+
     def _calc_density(self):
-        df = self.data.groupby(self.data.columns.tolist()).size()\
-            .reset_index().rename(columns={0: 'density'})
-        df['density'] = df['density']/df['density'].sum()
+        df = self.frequency
+        df['density'] = df['frequency']/df['frequency'].sum()
         return df
+    
+    # Aralık Uygulama İşlemleri----------------------------------------------------------------------
+
+    def __create_range(self,series):
+        """Serinin, min ve max değeri arasında eşit aralıklı sayıları döndür.
+        """
+        min_s = series.min()-0.0000000001
+        max_s = series.max()
+        return np.linspace(min_s,max_s,100)
+
+    
+    def get_current_range(self):
+        """Nesnenin varsayılan aralığını döndürür.
+        """
+        return self.__data_range
+
+
+    def set_range(self, incoming_range=None):
+        """Mevcut nesneye bir aralık ataması yapmak için kullanılır.
+        
+        Parameters
+        ----------
+        incoming_range : numpy.ndarray, default None
+            Nesneye atanacak aralık        
+        """
+        if incoming_range == None:
+            self.data_range = self.__create_range(self.data)
+
+        else:
+            self.data_range = incoming_range
+        
+    def convert_range(self,dataframe):
+        """Bir DataFrame'e belirli aralık değerleri uygulayarak yeniden düzenler.
+        """
+        range_dur = pd.cut(x=dataframe.duration, bins= self.__create_range(dataframe.duration))
+        range_amp = pd.cut(x=dataframe.amplitude, bins= self.__create_range(dataframe.amplitude))
+        return pd.concat([range_dur,range_amp],axis=1)
+
+    #-------------------------------------------------------------------------------------------------
 
     @property
     def marginal_density(self):
@@ -43,6 +92,7 @@ class Density:
         """
 
         #dataclass yalnızca, veriyi farklı şekillerde göstermek için kullanıldı.
+        #sözlükde kullanılabilirdi
         @dataclass
         class Gosterim:
             normal:pd.DataFrame #grafikte bu kullanılacak
@@ -83,6 +133,7 @@ class Density:
                 "choice, 'duration' ya da 'amplitude' olarak ayarlanmalıdır'")
 
 
+#Bu bölümde grafik ile ilgili işlemler yapıldı
 def draw_3d(df):
     """ 3 eksenli grafik çizer
         Parametre olarak verilen DataFrame, duration, amplitude ve conditional_distribution adında 3 sütun içermelidir.
