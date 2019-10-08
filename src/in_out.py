@@ -53,4 +53,3 @@ def write(name,full):
         fn = hour_series[i].strftime("%H-%M-%S")        
         write_excel(path=path,df=full.loc[hour_series[i]].dropna(),file_name=fn,prod_name=name)
         write_excel(path=path,df=full.loc[hour_series[i]].describe(),file_name=fn+'_detail', prod_name=name+'\\detail')     
-

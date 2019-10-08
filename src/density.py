@@ -1,34 +1,38 @@
-import plotly.graph_objects as go
-import plotly.express as px
-import pandas as pd
-import numpy as np
 from dataclasses import dataclass
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 
+class Interval:
+    """
+    Bu sınıf, verileri belirli aralıklara yerleştirmek için tasarlanmıştır.
+    Aralıklar oluşturulurken 2 ayrı yöntem kullanılır.
 
-class Density:
-    def __init__(self, dataframe):
-        self.data = dataframe
+    Parameters
+    ----------
+
+    range_method  : str 
+    aralık oluşturma yöntemi. 'interval' veya 'width' olabilir.            
+
+    Example
+    -------
+
+    >>> data = pd.read_excel("data.csv")
+
+    >>> range_creator = Interval(range_method='interval')
+
+    >>> data_of_range = range_creator.convert_range(data)
+    """
+
+    def __init__(self, range_method):
+       
+        self.range_method = range_method
+
         self.__first_range = None
         self.__second_range = None
 
-        self.frequency = self.get_frequency(self.data)
-        self.density_data = self._calc_density()
-        self.joint_density = self.density_data.pivot(index='duration',columns='amplitude',values='density')
-
-    @staticmethod
-    def get_frequency(df):
-        """Bir veri setindeki sayıların hangi sıklıkla yer aldığını döndürür.
-        """
-        df = df.groupby(df.columns.tolist()).size()\
-            .reset_index().rename(columns={0: 'frequency'})
-        return df        
-
-    def _calc_density(self):
-        df = self.frequency
-        df['density'] = df['frequency']/df['frequency'].sum()
-        return df
-    
-    # Aralık Uygulama İşlemleri----------------------------------------------------------------------
+        self.__width = None        
 
     def __intervals(self,series):
         """Serinin, min ve max değeri arasında eşit aralıklı sayıları döndür.
@@ -37,9 +41,59 @@ class Density:
         max_s = series.max()
         return np.linspace(min_s,max_s,100)
 
-    
-    def get_current_range(self):
+    def __width(self):
+        pass
+
+    def __set_range(self,data):
+        """range_method'a göre aralık değerlerini belirler.
+
+        Parameters
+        ----------        
+        data : pandas.DataFrame        
+        
+        """
+        if self.range_method == 'interval':
+            self.__first_range = self.__intervals(data.duration)
+            self.__second_range = self.__intervals(data.amplitude)
+
+        elif self.range_method == 'width':
+            pass
+
+        else:
+            raise ValueError('range_method: %s bulunamadı' %(self.range_method))
+
+    def convert_range(self,data,width = None):
+        """Bir DataFrame'e belirli aralık değerleri uygulayarak yeniden düzenler
+        ve düzenlenmiş halini döndürür.
+
+        Parameters
+        ----------
+
+        data: pandas.DataFrame
+            Düzenlenecek veri seti
+        
+        width: float, default: None
+            Her bir aralığın genişlik miktarı. Bu parametre yalnızca range_method 'width' ise kullanılabilir.
+
+        Returns
+        -------
+        pandas.DataFrame
+        """
+        if width != None:
+            self.__width = width            
+        self.__set_range(data)
+        
+        range_dur = pd.cut(x=data.duration, bins= self.__first_range)
+        range_amp = pd.cut(x=data.amplitude, bins= self.__second_range)
+        return pd.concat([range_dur,range_amp],axis=1)
+
+    def _get_current_range(self):
         """Nesnenin, eksenlere göre varsayılan aralığını döndürür.
+
+        Notes
+        -----
+        Bu method ile ilgili gelecekte düzenleme yapılması gerekmektedir.
+
         >>> obj = Density(data_of_6A_6B_U8)
         >>> obj.get_current_range()
         
@@ -49,54 +103,42 @@ class Density:
         | 1 | -13.125 | -12.784091 | -12.443182 | -12.102273 | ... | 29  |
         
         """
-        return pd.DataFrame([self.__first_range,self.__second_range])
+        return pd.DataFrame([self.__first_range,self.__second_range]).T
 
 
-    def set_range(self, range_method='intervals', defined_range = None):
-        """Mevcut nesneye bir aralık ataması yapmak için kullanılır.
-        yalnızca range_method 'other' değeri aldığında defined_range parametresi tanımlanmalıdır.
-        
-        Parameters
-        ----------
-        range_method  : str 
-            aralık oluşturma yöntemi. 'intervals', 'width' ve 'other' olabilir.
 
-        defined_range : numpy.ndarray, default None. 
-            Nesneye atanacak, daha önceden tanımlanmış aralık. 
+class Density:
+    def __init__(self, dataframe):
+        self.data = dataframe
 
-        Examples
-        --------
-        >>> obj = Density(data_of_6A_6B_U8)
-        >>> obj.set_range(range_method='intervals')
-        >>> range_df = obj.convert_range()
+        self.frequency = self.get_frequency(self.data)
+        self.density_data = self.__calc_density()
+        self.joint_density = self.density_data.pivot(index='duration',columns='amplitude',values='density')
+
+    @staticmethod
+    def get_frequency(df):
+        """Bir veri setindeki sayıların hangi sıklıkla yer aldığını döndürür.
         """
-        if range_method == 'intervals':
-            self.__first_range = self.__intervals(self.data.duration)
-            self.__second_range = self.__intervals(self.data.amplitude)
+        df = df.groupby(df.columns.tolist()).size()\
+            .reset_index().rename(columns={0: 'frequency'})
+        return df
 
-        elif range_method == 'width':
-            pass
-
-        else:
-            pass
-        
-    def convert_range(self):
-        """Bir DataFrame'e belirli aralık değerleri uygulayarak yeniden düzenler.
+    def __calculate_density(self):
+        """Marjinal density hesaplar ve yeni bir sütun olarak ekler.
         """
-        range_dur = pd.cut(x=self.data.duration, bins= self.__first_range)
-        range_amp = pd.cut(x=self.data.amplitude, bins= self.__second_range)
-        return pd.concat([range_dur,range_amp],axis=1)
-
-    #-------------------------------------------------------------------------------------------------
-
+        df = self.frequency
+        df['density'] = df['frequency']/df['frequency'].sum()
+        return df    
+    
+  
     @property
     def marginal_density(self):
         """Marjinal dağılımı döndürür."""
-        return self.create_pivot(self.density_data)
+        return self.__create_marginal(self.density_data)
         
 
-    @staticmethod
-    def create_pivot(df):
+    
+    def __create_marginal(df):
         """Bu method density, duration ve amplitude verileri içeren bir
             DataFrame'in pivot tablosunu oluşturur. Tablo, aynı zamanda
             density değerlerinin satır ve sütun toplamlarını da içerir.
