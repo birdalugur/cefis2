@@ -110,40 +110,45 @@ class Interval:
 class Density:
     def __init__(self, dataframe):
         self.data = dataframe
+               
 
-        self.frequency = self.get_frequency(self.data)
-        self.density_data = self.__calc_density()
-        self.joint_density = self.density_data.pivot(index='duration',columns='amplitude',values='density')
-
-    @staticmethod
-    def get_frequency(df):
-        """Bir veri setindeki sayıların hangi sıklıkla yer aldığını döndürür.
+    @property
+    def frequency(self):
+        """ joint density ve frekansı içerir
         """
-        df = df.groupby(df.columns.tolist()).size()\
-            .reset_index().rename(columns={0: 'frequency'})
-        return df
+        return self.__get_frequency(self.data)
 
-    def __calculate_density(self):
-        """Marjinal density hesaplar ve yeni bir sütun olarak ekler.
-        """
-        df = self.frequency
-        df['density'] = df['frequency']/df['frequency'].sum()
-        return df    
-    
-  
     @property
     def marginal_density(self):
         """Marjinal dağılımı döndürür."""
-        return self.__create_marginal(self.density_data)
-        
+        return self.__create_marginal(self.frequency)  
 
+
+    def __get_frequency(self,data):
+        """Bir veri setindeki sayıların hangi sıklıkla yer aldığını döndürür.
+        """
+        df = data.groupby(data.columns.tolist()).size()\
+            .reset_index().rename(columns={0: 'frequency'})
+
+        df = self.__calculate_density(df)
+        return df
+
+    def __calculate_density(self, df):
+        """Marjinal density hesaplar ve yeni bir sütun olarak ekler.
+        """        
+        df['density'] = df['frequency']/df['frequency'].sum()
+        return df
     
-    def __create_marginal(df):
+    
+    def __create_marginal(self,df):
         """Bu method density, duration ve amplitude verileri içeren bir
             DataFrame'in pivot tablosunu oluşturur. Tablo, aynı zamanda
             density değerlerinin satır ve sütun toplamlarını da içerir.
         """
-        pivot = pd.pivot_table(df, values='density', index=['duration'], columns='amplitude')        
+        #TypeError alındığından pivot_table yerine pivot metodu kullanıldı
+        #Fakat, Görsel olarak pivot_table daha uygun
+        #pivot = pd.pivot_table(df, values='density', index=['duration'], columns='amplitude')
+        #pivot = df.pivot(values='density', index='duration', columns='amplitude')        
         horizontal_total = pivot.agg('sum',axis=1)        
         pivot['sum'] = horizontal_total
         vertical_total=pivot.agg('sum')
