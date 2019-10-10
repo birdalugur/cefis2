@@ -179,33 +179,15 @@ class Density:
 
         #conditional density/y
         if choice == 'amplitude':
-            df_piv_d = self.marginal_density.drop('sum', axis=1)
-            #distribution_of_duration = (
-             #   df_piv_d.iloc[:-1] / df_piv_d.iloc[-1]).stack().to_frame('conditional_distribution')
-            distribution_of_pivot = df_piv_d.iloc[:-1] / df_piv_d.iloc[-1]
-            distribution_of_amplitude = distribution_of_pivot.stack().to_frame('conditional_distribution').swaplevel(0,1).sort_index()
-
-            #Her bir sütundaki değerler toplanıp son satıra yazdırılıyor.
-            sutun_toplami=distribution_of_pivot.agg('sum')
-            sutun_toplami.name = 'sum'
-            distribution_of_pivot = distribution_of_pivot.append(sutun_toplami)
-
-            return Gosterim(distribution_of_amplitude,distribution_of_pivot)
-            #return distribution_of_duration
+            con_density_table = self.joint_density/self.vertical_total_of_joint
+            con_density = con_density_table.stack().to_frame('conditional_distribution').swaplevel(0,1).sort_index()          
+            return Gosterim(con_density,con_density_table)
 
         #conditional density/x
         elif choice == 'duration':
-            df_piv_a = self.marginal_density.transpose().drop('sum', axis=1)
-            # distribution_of_amplitude = (
-            #     df_piv_a.iloc[:-1] / df_piv_a.iloc[-1]).stack().to_frame('conditional_distribution')
-            distribution_of_pivot = df_piv_a.iloc[:-1] / df_piv_a.iloc[-1]
-            distribution_of_duration = distribution_of_pivot.stack().to_frame('conditional_distribution').swaplevel(0, 1, axis=0).sort_index()
-
-            distribution_of_pivot = distribution_of_pivot.transpose()
-            satir_toplami = distribution_of_pivot.agg('sum',axis=1)            
-            distribution_of_pivot['sum'] = satir_toplami
-            return Gosterim(distribution_of_duration,distribution_of_pivot)
-            #return distribution_of_amplitude.swaplevel(0, 1, axis=0).sort_index()
+            con_density_table = (self.joint_density.T/self.horizontal_total_of_joint).T
+            con_density = con_density_table.stack().to_frame('conditional_distribution').swaplevel(0, 1, axis=0).sort_index()
+            return Gosterim(con_density,con_density_table)
 
         else:
             raise Exception(
