@@ -112,6 +112,7 @@ class Density:
         self.data = dataframe
                
 
+    #----------ALL PROPERTIES----------------------------
     @property
     def frequency(self):
         """ joint density ve frekansı içerir
@@ -119,9 +120,18 @@ class Density:
         return self.__get_frequency(self.data)
 
     @property
-    def marginal_density(self):
-        """Marjinal dağılımı döndürür."""
-        return self.__create_marginal(self.frequency)  
+    def joint_density(self):
+        return self.__create_joint(self.frequency)
+
+    @property
+    def horizontal_total_of_joint(self):
+        return self.__horizontal_total(self.joint_density)
+
+    @property
+    def vertical_total_of_joint(self):
+        return self.__vertical_total(self.joint_density)
+    
+    #---------------------------------------------------
 
 
     def __get_frequency(self,data):
@@ -140,21 +150,20 @@ class Density:
         return df
     
     
-    def __create_marginal(self,df):
+    def __create_joint(self,df):
         """Bu method density, duration ve amplitude verileri içeren bir
             DataFrame'in pivot tablosunu oluşturur. Tablo, aynı zamanda
             density değerlerinin satır ve sütun toplamlarını da içerir.
         """
-        #TypeError alındığından pivot_table yerine pivot metodu kullanıldı
-        #Fakat, Görsel olarak pivot_table daha uygun
-        #pivot = pd.pivot_table(df, values='density', index=['duration'], columns='amplitude')
-        #pivot = df.pivot(values='density', index='duration', columns='amplitude')        
-        horizontal_total = pivot.agg('sum',axis=1)        
-        pivot['sum'] = horizontal_total
-        vertical_total=pivot.agg('sum')
-        vertical_total.name = 'sum'
-        pivot = pivot.append(vertical_total)
+        
+        pivot = pd.pivot_table(df, values='density', index=['duration'], columns='amplitude')
         return pivot
+
+    def __horizontal_total(self, joint_dens):
+        return joint_dens.agg('sum',axis=1)
+
+    def __vertical_total(self, joint_dens):
+        return joint_dens.agg('sum')
 
 
     def conditional_density(self, choice):
