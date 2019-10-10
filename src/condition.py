@@ -6,7 +6,6 @@
 
 import pandas as pd
 from datetime import time
-import src.daily_data as dt
 
 # In[ ]:
 
@@ -135,10 +134,10 @@ def _conditionally_scan(df,medyan):
 # In[7]:
 
 
-def scan(df):
+def group_scan(df):
     """Medyana göre dalgaları yeniden düzenler
     Parameters:
-        df(pd.Dataframe): alt dataframe'ler içeren bir dataframe
+        df(pd.Dataframe): medyan koşulu konularak yeniden düzenlenecek veri grubu
     Returns:
         pd.Dataframe: pd.concat([df,df..])
     """
@@ -146,9 +145,24 @@ def scan(df):
     main_index = df.index.levels[0].tolist()    
     for index in main_index:
         current_df = df.loc[index]
-        current_medyan = dt.divide(current_df)
+        current_medyan = divide(current_df)
         df_list.append(_conditionally_scan(df=current_df,medyan=current_medyan))
         
     combin_df = pd.concat(df_list,keys=main_index)
     return combin_df
 
+#%%
+def single_scan(df):
+    """Medyana göre dalgaları yeniden düzenler
+    Parameters:
+        df(pd.Dataframe): medyan koşulu konularak yeniden düzenlenecek veri
+    Returns:
+        pd.Dataframe: pd.concat([df,df..])
+    """
+    medyan = divide(df)
+    return _conditionally_scan(df=df,medyan=medyan)
+
+
+#%%
+def divide(df):
+    return {'pozitive':df[df['amplitude']>0].median(),'negative':df[df['amplitude']<0].median()}

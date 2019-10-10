@@ -1,53 +1,26 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 # In[3]:
-
-
 import pandas as pd
 import glob
 import datetime
 import os
+import numpy as np
 
-
-# In[ ]:
-
-
-def get_path(dir_path):
-    """
-    @type dir_path: str
-    @param dir_path: okunacak klasöre ait path
-    @rtype: list
-    @returns: Belirtilen klasördeki excel dosyalarına ait yolun bir listesini döndürür.
-    """
-
-    files = [f for f in glob.glob(dir_path + "**/*.xlsx", recursive=True)]
-    return files
-
-
-# In[ ]:
-
-
-def get_date(file_path):
-    """Tarih bilgisini dosya adından ayrıştırır ve döndürür
+#%%
+def split_df(df,hour):
+    """Verileri 1er saatlik dilimlere böler(23 ayrı df).
     Parameters:
-        file_path (str) : .xlsx dosyasına ait path
+        df (dataframe):
+        hour (int): varsayılan olarak 1. Gelecekte, asal olmayan saatlik veri için değiştirilebilir.
     Returns:
-        Timestamp: dataya ait tarih bilgisi
-    """
-    date_list = file_path.split('\\')[-1].split('.')[0].split('_')[0:3]
-    date = str()
-    for y in date_list:
-        if date_list.index(y) != 2:
-            date = date + str(y) + '.'
-        else:
-            date = date + str(y)
-    return pd.Timestamp(date)
+        list: Saatlik olarak bölünmüş df'lerin bir listesi."""
+    return np.array_split(df.drop(df.index[len(df)-1]),hour)
+
+#%%
+def get_mid_price(frame):
+    return find_arithmeticMean(frame.bid_price, frame.ask_price)
 
 
-# In[ ]:
-
-
+#%%
 def combine_date(time_series,date):
     """tarih ve saat bilgisini birleştirip series olarak döndürür.
     Parameters:
@@ -107,115 +80,32 @@ def find_arithmeticMean(*args):
     """
     
     number=len(args)
-    return pd.Series(data=sum(args)/number,index=args[0].index) 
-
+    seri = pd.Series(data=sum(args)/number) 
+    seri=seri.reset_index(drop=True)
+    return seri
 
 # In[1]:
 
 
-def find_spread(mid_price,a_PNLTICK,a_TICKSIZE, b_PNLTICK,b_TICKSIZE):
+def find_spread(a_series,b_series,values):
     """6A ve 6B verisinden SPREAD verisini üretir.
     Parameters:
         mid_price(tuple):
-        a_series(pd.Series): 6A sütunundaki veriler
-        b_series(pd.Series): 6B sütunundaki veriler
-        a_PNLTICK(float): 6A'ya ait PNLTICK değeri
-        a_TICKSIZE(float): 6A'ya ait TICKSIZE değeri
-        b_PNLTICK(float): 6B'ye ait PNLTICK değeri
-        b_TICKSIZE(float): BA'ya ait TICKSIZE değeri
+        values(dict): ticksize değerleri
     Returns:
         pd.Series: Hesaplanmış spread verisi
     """
-    a_series=mid_price[0]
-    b_series=mid_price[1]
-    atick = a_PNLTICK/a_TICKSIZE
-    btick = b_PNLTICK/b_TICKSIZE
+    atick = values['a_PNLTICK']/values['a_TICKSIZE']
+    btick = values['b_PNLTICK']/values['b_TICKSIZE']
     size = len(a_series)
     spread = size*[0]
-    for i in range(size):        
+    for i in range(size): 
         try:
-            spread[i+1] = (((a_series[i+1] - a_series[i])*atick) - ((b_series[i+1] - b_series[i])*btick)) +spread[i]    
-        except:
-            pass
-        
+            spread[i+1] = (((a_series.iat[i+1] - a_series.iat[i])*atick) - ((b_series.iat[i+1] - b_series.iat[i])*btick)) +spread[i] 
+        except:            
+            pass        
     return pd.Series(data=spread,index=a_series.index,name='spread')
 
-
-# In[ ]:
-
-
-def element_counts(series,first=None,last=None):
-    """hangi değerden kaç adet olduğunu döndürür.
-    Parameters:
-        series(pd.Series): incelenecek seri
-        first(int):bakılacak aralığın başlangıç değeri
-        last(int):bakılacak aralığın bitiş değeri
-    """
-    if (first==None) and (last==None):
-        return pd.DataFrame(series.value_counts())
-    else:
-        return series[first:last].value_counts()
-
-
-# In[ ]:
-
-
-def write_excel(path,df,file_name,prod_name):
-    directory_path = path+'\\'+prod_name + '\\'
-    if not os.path.exists(directory_path):
-        os.mkdir(directory_path)
-        if not os.path.exists(directory_path+'detail\\'):
-            os.mkdir(directory_path+'detail\\')
-    writer = pd.ExcelWriter(directory_path+ file_name+'.xlsx', engine='xlsxwriter')
-    df.to_excel(writer, sheet_name='Sheet1')
-    writer.save()
-
-
-# In[2]:
-
-
-def combin_date_and_time(time_series,date):
-    """Bu fonksiyon, pd.Series.apply() metodundan çağrılmalı.
-    Parameters
-        time_series (pd.Series):
-        date (datetime.date):
-    Returns
-        datetime.datetime
-    """
-    return datetime.datetime.combine(date,time_series)
-
-
-# In[1]:
-
-
-def split_df(df,hour=1):
-    """Verileri 1er saatlik dilimlere böler(23 ayrı df).
-    Parameters:
-        df (dataframe):
-        hour (int): varsayılan olarak 1. Gelecekte, asal olmayan saatlik veri için değiştirilebilir.
-    Returns:
-        list: Saatlik olarak bölünmüş df'lerin bir listesi."""
-    start=0
-    stop = 3600
-    loop=int(23/hour)
-    df_list=[pd.DataFrame()]*loop
-    count=0    
-    while count<loop:
-        df_list[count]= df_list[count].append(df[start:stop])
-        start=stop
-        stop+=3600
-        count+=1
-    return df_list  
-
-
-
-# In[ ]:
-def get_detail(df):
-    detail_list = []
-    time_list= df.index.levels[0].tolist()
-    for t in time_list:
-        detail_list.append(df.loc[t].describe())
-    return pd.concat(detail_list,keys=time_list)
 
 
 # In[ ]:
