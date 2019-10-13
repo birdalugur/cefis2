@@ -49,18 +49,18 @@ def read (path):
     df.columns = columns
     return df
 
-def unnamed1(df):
+def _get_duramp(df):
     lengt = df.shape[1]
     df_list = []
     for i in range(lengt):
         df_list.append(aux.find_duramp(df.iloc[:,1]))
     return pd.concat(df_list).dropna()
 
-def unnamed2(df):
+def get_duramp(df):
     new_df = duzenle(df)
     product = {}
     for pair in pairs:
-        product[pair] = unnamed1(new_df[pair])
+        product[pair] = _get_duramp(new_df[pair])
     return product
 
 def duzenle(df):
@@ -102,22 +102,30 @@ if __name__ == '__main__':
     change_list = [change_al(df) for df in spread]
 
     #Duration ve Amplitude Hesaplanıyor
-    duramp = [unnamed2(change) for change in change_list]
+    duramp = [get_duramp(change) for change in change_list]
 
     #Medyanı baz alarak verileri yeniden düzenliyoruz
     hour_series = pd.date_range('2018-01-01-18', periods=23, freq='H').time
     edited_data = {}
+    unconditional = {}
 
     for pair in pairs:
         con_list = []
+        uncon_list = []
         for i in range(23):
             current = duramp[i][pair]
             con_df = con.single_scan(current)
             con_list.append(con_df)
+            uncon_list.append(current)
         edited_data[pair] = pd.concat(con_list,keys=hour_series)
+        unconditional[pair] = pd.concat(uncon_list,keys= hour_series)
 
+    #Dosyaya yazılıyor
     for pair in pairs:
         print("dosyaya yazılıyor: ",pair)
         df = edited_data[pair].reset_index()
+        uncon_df = unconditional[pair].reset_index()
         df.columns=['time_period','time','duration','amplitude']
+        uncon_df.columns=['time_period','time','duration','amplitude']
         df.to_csv(pair+".csv")
+        uncon_df.to_csv(pair+"_unconditional.csv",index = False)

@@ -23,6 +23,10 @@ class Interval:
     >>> range_creator = Interval(range_method='interval')
 
     >>> data_of_range = range_creator.convert_range(data,100)
+
+    >>> second_creator = Interval(range_method='width')
+
+    >>> second_creator.convert_range(data,5)
     """
 
     def __init__(self, range_method):
