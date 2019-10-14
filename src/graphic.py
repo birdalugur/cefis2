@@ -74,4 +74,4 @@ def conditional_drawing(data, state):
     -------
     matplotlib.axes.Axes
     """
-    return data.loc[state].plot.bar()
+    return data.loc[state].plot.bar().show()
