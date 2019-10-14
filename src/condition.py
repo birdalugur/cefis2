@@ -52,7 +52,7 @@ def get_conditon(df_line, min_duration=None, min_amplitude=None):
 # In[3]:
 
 
-def _conditionally_scan(df,medyan):
+def _conditionally_scan(df,condition):
     """Bir dataframe'i verilen koşullara göre yeniden düzenler.
     Parameters:
         df (dataframe): pd.Dataframe nesnesi
@@ -85,11 +85,11 @@ def _conditionally_scan(df,medyan):
         current_sign = find_sign(current_amp)
 
         if current_sign==1:
-            min_dur = medyan['pozitive'].duration
-            min_amp = medyan['pozitive'].amplitude
+            min_dur = condition['pozitive'].duration
+            min_amp = condition['pozitive'].amplitude
         else:
-            min_dur = medyan['negative'].duration
-            min_amp = medyan['negative'].amplitude
+            min_dur = condition['negative'].duration
+            min_amp = condition['negative'].amplitude
 
         second = True
         while(second and cout<len(df)+1):
@@ -152,17 +152,53 @@ def group_scan(df):
     return combin_df
 
 #%%
-def single_scan(df):
+def single_scan(df, condition = 'median',quantile_value=None):
     """Medyana göre dalgaları yeniden düzenler
     Parameters:
-        df(pd.Dataframe): medyan koşulu konularak yeniden düzenlenecek veri
+        df(pd.Dataframe): koşula göre yeniden düzenlenecek veri.
+        condition(str): koşul türü. 'median' ya da 'percentile' olabilir. Default: 'median'.
+        quantile_value (float): Default: None. Yalnızca condition='percentile' ise kullanılır.
     Returns:
         pd.Dataframe: pd.concat([df,df..])
+
+    Example
+    -------
+    >>> single_scan(current,condition='percentile',quantile_value=0.25)
     """
-    medyan = divide(df)
-    return _conditionally_scan(df=df,medyan=medyan)
+
+    if condition == 'median':
+        medyan = divide_median(df)
+        return _conditionally_scan(df=df,condition=medyan)
+
+    elif condition == 'percentile':
+        percentile = divide_percentile(df,quantile_value)
+        return _conditionally_scan(df=df,condition=percentile)
 
 
 #%%
-def divide(df):
+def divide_median(df):
+    """Veri, amplitude değeri 0'dan büyük olanlar ve 0'dan küçük olanlar olmak üzere 2'ye ayrılır.
+    2 parçanın, duration ve amplitude değerlerinin medyanı ayrı ayrı hesaplanır.
+
+    Returns
+    -------
+    dict : pozitif medyan ve negatif medyan olan 2 pandas.Series içerir.
+    """
     return {'pozitive':df[df['amplitude']>0].median(),'negative':df[df['amplitude']<0].median()}
+
+
+#%%
+def divide_percentile(df,value):
+    """Veri, amplitude değeri 0'dan büyük olanlar ve 0'dan küçük olanlar olmak üzere 2'ye ayrılır.
+    2 parçanın, duration ve amplitude değerlerinin percentile'ı ayrı ayrı hesaplanır.
+
+    Parameters
+    ----------
+    df: pandas.DataFrame
+    value (float): Quantile değeri
+
+    Returns
+    -------
+    dict : pozitif percentile ve negatif percentile olan 2 pandas.Series içerir.
+    """
+    return {'pozitive':df[df['amplitude']>0].quantile(value),'negative':df[df['amplitude']<0].quantile(value)}

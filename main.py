@@ -114,7 +114,7 @@ if __name__ == '__main__':
         uncon_list = []
         for i in range(23):
             current = duramp[i][pair]
-            con_df = con.single_scan(current)
+            con_df = con.single_scan(current,condition='median')
             con_list.append(con_df)
             uncon_list.append(current)
         edited_data[pair] = pd.concat(con_list,keys=hour_series)
