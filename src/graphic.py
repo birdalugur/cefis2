@@ -1,4 +1,8 @@
 #Bu bölümde grafik ile ilgili işlemler yapıldı
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+
 def draw_3d(df):
     """ 3 eksenli grafik çizer
         Parametre olarak verilen DataFrame, duration, amplitude ve conditional_distribution adında 3 sütun içermelidir.
@@ -75,3 +79,27 @@ def conditional_drawing(data, state):
     matplotlib.axes.Axes
     """
     return data.loc[state].plot.bar().show()
+
+def _split_product(df):
+    """MultiIndex dataframi ürün bazında ayırır ve tüm günleri birleştirir
+    """
+    idx = pd.IndexSlice
+    df = df.set_index('time')
+    products = list(df.columns.get_level_values(1).unique())
+    product_list = {}
+    for product in products:
+        urun =df.loc[:,idx[:,product]]
+        urun = urun.stack(level=0).reset_index().drop('level_1',axis=1)
+        product_list[product] = urun        
+    return product_list  
+
+def spread_scatter(hourly_spread):
+    """
+    Parameters
+    ----------
+    hourly_spread (dict) : Belirli bir saate ait, tüm ürünleri içeren spread verisi
+    """
+    hourly_spread = _split_product(hourly_spread)
+    while hourly_spread:
+        item = hourly_spread.popitem()[1]
+        px.scatter(item, x="time", y=item.columns[1]).show()
