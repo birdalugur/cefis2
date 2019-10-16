@@ -103,3 +103,19 @@ def spread_scatter(hourly_spread):
     while hourly_spread:
         item = hourly_spread.popitem()[1]
         px.scatter(item, x="time", y=item.columns[1]).show()
+
+
+def scatter_all_days(df):
+    fig = go.Figure()
+    size = df.columns.size
+    for i in range(size):
+        data = df.iloc[:,i]
+        name = df.columns.values.item(i).strftime("%m. %d. %Y")
+        fig.add_trace(
+            go.Scatter(
+                x = df.index,
+                y = data,
+                name = name            
+            )
+        )
+    return fig

@@ -170,3 +170,10 @@ def find_duramp(data):
     series_amp = pd.Series(data=amp_list,name='amplitude',index=data.index).dropna()
     return pd.DataFrame(data=[series_dur,series_amp]).transpose()
         
+#%%
+def extract_product(df, product_name):
+    """Belirli bir ürüne ait spread verisini ayıklar
+    """
+    idx = pd.IndexSlice
+    df = df.set_index('time')
+    return df.loc[:,idx[:,product_name]].droplevel(level=1,axis=1)    
