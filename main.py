@@ -53,7 +53,7 @@ def _get_duramp(df):
     lengt = df.shape[1]
     df_list = []
     for i in range(lengt):
-        df_list.append(aux.find_duramp(df.iloc[:,1]))
+        df_list.append(aux.find_duramp(df.iloc[:,i]))
     return pd.concat(df_list).dropna()
 
 def get_duramp(df):

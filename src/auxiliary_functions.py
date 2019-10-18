@@ -177,3 +177,16 @@ def extract_product(df, product_name):
     idx = pd.IndexSlice
     df = df.set_index('time')
     return df.loc[:,idx[:,product_name]].droplevel(level=1,axis=1)    
+
+
+def get_time(hour_indice,prod_name):
+    """Time bilgisini amplitude verisinden alarak döndürür.
+    Parameters
+    ----------
+    hour_indice (int): time_series indisi. Örnek : 18:00:00-19:00:00 için 0, 19:00:00-20:00:00 için 1
+    prod_name (str): ürün adı
+    Return
+    ------
+    pandas.DataFrame : n güne ait time series içerir
+    """
+    return duramp[hour_indice]['6AU8_6BU8'].reset_index().drop(['duration','amplitude'],axis=1).set_index('level_0')

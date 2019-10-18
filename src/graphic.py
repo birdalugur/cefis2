@@ -119,3 +119,18 @@ def scatter_all_days(df):
             )
         )
     return fig
+
+
+def draw_spread(prod_name, hour_indice, spread, amplitude):
+    fig = go.Figure()
+    specific_spread = aux.extract_product(spread[hour_indice],prod_name)
+    time_serie = aux.get_time(hour_indice,prod_name)
+    count = time_serie.index.max()+1
+    for i in range(count):
+        data = AB.iloc[:,i].loc[x.loc[0].level_1]
+        fig.add_trace(go.Scatter(
+                x=data.index,
+                y=data,
+                name=str(i),
+                opacity=0.8))
+    return fig
