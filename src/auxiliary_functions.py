@@ -179,7 +179,7 @@ def extract_product(df, product_name):
     return df.loc[:,idx[:,product_name]].droplevel(level=1,axis=1)    
 
 
-def get_time(hour_indice,prod_name):
+def get_time(hour_indice,prod_name,duramp):
     """Time bilgisini amplitude verisinden alarak döndürür.
     Parameters
     ----------
