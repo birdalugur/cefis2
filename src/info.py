@@ -35,3 +35,4 @@ def element_counts(series,first=None,last=None):
         return pd.DataFrame(series.value_counts())
     else:
         return series[first:last].value_counts()
+
