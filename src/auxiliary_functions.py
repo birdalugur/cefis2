@@ -36,15 +36,18 @@ def combine_date(time_series,date):
 # In[ ]:
 
 
-def find_change(serie):
+def find_change(data):
     """Ardışık veriler arasındaki değişim miktarını hesaplar
        baştaki ve sondaki sıfırları ve Nan'ları kaldırır.
     Parameters:
-        data (pandas.Series): Hesaplanacak veri
+        data (pandas.DataFrame): Hesaplanacak veri
     Returns:
-        pandas.Series: Değişim miktarının sıralı bir listesi
-    """    
-    change = pd.np.trim_zeros(serie.diff().dropna())
+        df_change: Değişim miktarı
+    """
+    data=data.set_index(data.date)
+    data=data.drop('date',axis=1)
+    change = data.diff().dropna()
+    change=change.apply(np.trim_zeros)
     return change
 
 

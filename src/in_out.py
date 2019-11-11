@@ -25,12 +25,14 @@ def read_allData(path_list,cols=None):
     return master_data
 
 
-def get_path(dir_path):
-    """
-    @type dir_path: str
-    @param dir_path: okunacak klasöre ait path
-    @rtype: list
-    @returns: Belirtilen klasördeki excel dosyalarına ait yolun bir listesini döndürür.
+def get_path(folder_name):
+    """Belirtilen klasördeki excel dosyalarına ait yolun bir listesini döndürür.
+    Parameters
+    ----------
+    folder_name (str) : 
+    Returns
+    -------
+    path_list (list)
     """
 
     files = [f for f in glob.glob(dir_path + "**/*.xlsx", recursive=True)]
