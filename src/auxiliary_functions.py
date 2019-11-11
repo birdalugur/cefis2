@@ -36,7 +36,7 @@ def combine_date(time_series,date):
 # In[ ]:
 
 
-def find_change(data):
+def find_change(serie):
     """Ardışık veriler arasındaki değişim miktarını hesaplar
        baştaki ve sondaki sıfırları ve Nan'ları kaldırır.
     Parameters:
@@ -44,9 +44,8 @@ def find_change(data):
     Returns:
         pandas.Series: Değişim miktarının sıralı bir listesi
     """    
-    df = pd.np.trim_zeros(data.diff().dropna())
-    df.name="change"
-    return df
+    change = pd.np.trim_zeros(serie.diff().dropna())
+    return change
 
 
 # In[ ]:
@@ -63,34 +62,9 @@ def combine_df(frames,dates):
     
     return pd.concat(frames, keys=dates,axis=1,sort=False)
 
-#%%
-def get_mid_price(frame):
-    """Verilen frame'deki bid_price ve ask_price sütununu kullanarak
-       aritmetik ortalamayı hesaplar ve döndürür
-    Parameters
-    ----------
-    frame (pandas.DataFrame)
 
-    Returns
-    -------
-    pandas.Series
-    """
-    return __find_arithmeticMean(frame.bid_price, frame.ask_price)
 
-# In[1]:
 
-def __find_arithmeticMean(*args):
-    """verilerin aritmetik ortalamasını hesaplar ve döndürür.
-    Parameters:        
-        args: Her biri pd.Series olan değişken sayıda argüman alabilir
-    Returns:
-        pd.Series: argümanların aritmetik ortalaması
-    """
-    
-    number=len(args)
-    seri = pd.Series(data=sum(args)/number) 
-    seri=seri.reset_index(drop=True)
-    return seri
 
 # In[1]:
 
@@ -198,3 +172,31 @@ def get_time(hour_indice,prod_name,duramp):
     pandas.DataFrame : n güne ait time series içerir
     """
     return duramp[hour_indice]['6AU8_6BU8'].reset_index().drop(['duration','amplitude'],axis=1).set_index('level_0')
+
+
+#silinecek********************************************************************
+def get_mid_price(frame):
+    """Verilen frame'deki bid_price ve ask_price sütununu kullanarak
+       aritmetik ortalamayı hesaplar ve döndürür
+    Parameters
+    ----------
+    frame (pandas.DataFrame)
+    Returns
+    -------
+    pandas.Series
+    """
+    return __find_arithmeticMean(frame.bid_price, frame.ask_price)
+
+def __find_arithmeticMean(*args):
+    """verilerin aritmetik ortalamasını hesaplar ve döndürür.
+    Parameters:        
+        args: Her biri pd.Series olan değişken sayıda argüman alabilir
+    Returns:
+        pd.Series: argümanların aritmetik ortalaması
+    """
+    
+    number=len(args)
+    seri = pd.Series(data=sum(args)/number) 
+    seri=seri.reset_index(drop=True)
+    return seri
+#*****************************************************************************

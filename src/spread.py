@@ -1,19 +1,5 @@
 import pandas as pd
 
-def group_by_spread(df_mp,values):
-    """df_mp'ı tarih ve saate göre gruplar ve her bir gruba get_spread fonksiyonunu uygular
-    Parameters
-    ----------
-    df_mp (pandas.DataFrame) : mid price 
-    values (dict): ticksize değerleri
-    Returns
-    pd.DataFrame : pair'in spread değeri
-    """
-    df_mp=df_mp.reset_index()
-    mp_group=df_mp.groupby([df_mp.date.dt.floor('d'),df_mp.date.dt.hour])
-    spread_series=mp_group.apply(lambda x : get_spread(x,values))
-    df_spread=pd.DataFrame(spread_series).droplevel([0,1])
-    return df_spread
 
 def get_spread(pair,values):
     """6A ve 6B gibi mid_price verisinden SPREAD verisini üretir.

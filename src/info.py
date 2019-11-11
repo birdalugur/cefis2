@@ -1,9 +1,12 @@
 import pandas as pd
 import src.auxiliary_functions as aux
-
+from platform import system
 
 def __parse_path(path):
-    return path.split('\\')[-1].split('.')[0].split('_')
+    if system() == 'Windows':
+        return path.split('\\')[-1].split('.')[0].split('_')
+    else:
+        return path.split('/')[-1].split('.')[0].split('_')
 
 def __findDate(date):
     return pd.Timestamp(date)
@@ -14,7 +17,8 @@ def get_productName(path):
 
 def get_productDate(path):
     split_text = __parse_path(path)
-    return __findDate(split_text[0])
+    return __findDate(split_text[0])  
+        
 
 def get_detail(df):
     """DataFrame'e ait istatistiksel bilgi döndürür """
