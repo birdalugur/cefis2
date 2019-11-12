@@ -20,3 +20,15 @@ def average_of_series(*args):
     seri = pd.Series(data=sum(args)/number) 
     seri=seri.reset_index(drop=True)
     return seri
+
+def mark_data(data):
+    """Dalgaları bulmak için verileri işaretler
+    """
+    # mask the zeros
+    s = data.eq(0)
+    # merge the zeros to the wave after them
+    m = np.sign(data).mask(s).bfill()
+    # result
+    marked_data = m.diff().ne(0).cumsum()
+    marked_data.name='sign'
+    return marked_data
