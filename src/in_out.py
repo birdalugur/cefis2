@@ -35,7 +35,7 @@ def get_path(folder_name):
     path_list (list)
     """
 
-    files = [f for f in glob.glob(dir_path + "**/*.xlsx", recursive=True)]
+    files = [f for f in glob.glob(folder_name + "**/*.xlsx", recursive=True)]
     return files
 
 
