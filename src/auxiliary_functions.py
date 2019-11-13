@@ -5,7 +5,7 @@ import datetime
 import os
 import numpy as np
 
-#%%
+
 def split_df(df,hour):
     """Verileri 1er saatlik dilimlere böler(23 ayrı df).
     Parameters:
@@ -16,8 +16,6 @@ def split_df(df,hour):
     return np.array_split(df.drop(df.index[len(df)-1]),hour)
 
 
-
-#%%
 def combine_date(time_series,date):
     """tarih ve saat bilgisini birleştirip series olarak döndürür.
     Parameters:
@@ -33,25 +31,6 @@ def combine_date(time_series,date):
     return pd.Series(data=date_list)     
 
 
-# In[ ]:
-
-
-def find_change(data):
-    """Ardışık veriler arasındaki değişim miktarını hesaplar
-       baştaki ve sondaki sıfırları ve Nan'ları kaldırır.
-    Parameters:
-        data (pandas.DataFrame): Hesaplanacak veri
-    Returns:
-        df_change: Değişim miktarı
-    """
-    data=data.set_index(data.date)
-    data=data.drop('date',axis=1)
-    change = data.diff().dropna()
-    change=change.apply(np.trim_zeros)
-    return change
-
-
-# In[ ]:
 
 
 def combine_df(frames,dates):
@@ -65,11 +44,6 @@ def combine_df(frames,dates):
     
     return pd.concat(frames, keys=dates,axis=1,sort=False)
 
-
-
-
-
-# In[1]:
 
 
 def find_spread(a_series,b_series,values):
@@ -92,70 +66,6 @@ def find_spread(a_series,b_series,values):
     return pd.Series(data=spread,index=a_series.index,name='spread')
 
 
-
-# In[ ]:
-def find_duramp(data):
-    """ (+),(-) yönde ya da sabit bir dalganın süresini hesaplar
-    Parameters:
-        data (pandas.Series): change
-    Returns:
-        pd.Series: Her bir yönde gerçekleşen değişimin süresi
-    """
-    data = data.dropna()
-    size = len(data)
-    dur_list = size*[None]
-    amp_list = size*[None]
-    sign_negativ =0
-    sign_positive=0
-    amplitude = 0
-    #sign_zero=0
-    for i in range(0,size+1):
-        try:
-            change = data.iat[i]            
-        except:
-            if sign_positive>0:
-                dur_list[i-1] = sign_positive
-                amp_list[i-1] = amplitude
-            else:
-                if sign_negativ>0:
-                    dur_list[i-1] = sign_negativ
-                else:
-                    continue
-                
-        if change<0:
-            if (sign_positive==0 and sign_negativ==0 ) or (sign_positive==0 and sign_negativ>0):
-                sign_negativ+=1
-                amplitude +=change
-            if sign_positive>0:
-                amp_list[i-1]=amplitude
-                dur_list[i-1]=sign_positive
-                sign_positive=0
-                sign_negativ+=1
-                amplitude=change
-
-        elif change>0:
-            if (sign_negativ==0 and sign_positive==0 ) or (sign_negativ==0 and sign_positive>0):
-                amplitude+=change
-                sign_positive+=1
-            if sign_negativ>0:
-                amp_list[i-1]=amplitude
-                dur_list[i-1]=sign_negativ
-                sign_negativ=0
-                sign_positive+=1
-                amplitude=change
-        else:
-            if sign_negativ>0:
-                sign_negativ+=1
-            elif sign_positive>0:
-                sign_positive+=1
-            else:
-                continue
-            
-    series_dur = pd.Series(data=dur_list,name='duration',index=data.index).dropna()
-    series_amp = pd.Series(data=amp_list,name='amplitude',index=data.index).dropna()
-    return pd.DataFrame(data=[series_dur,series_amp]).transpose()
-        
-#%%
 def extract_product(df, product_name):
     """Belirli bir ürüne ait spread verisini ayıklar
     """
@@ -177,29 +87,3 @@ def get_time(hour_indice,prod_name,duramp):
     return duramp[hour_indice]['6AU8_6BU8'].reset_index().drop(['duration','amplitude'],axis=1).set_index('level_0')
 
 
-#silinecek********************************************************************
-def get_mid_price(frame):
-    """Verilen frame'deki bid_price ve ask_price sütununu kullanarak
-       aritmetik ortalamayı hesaplar ve döndürür
-    Parameters
-    ----------
-    frame (pandas.DataFrame)
-    Returns
-    -------
-    pandas.Series
-    """
-    return __find_arithmeticMean(frame.bid_price, frame.ask_price)
-
-def __find_arithmeticMean(*args):
-    """verilerin aritmetik ortalamasını hesaplar ve döndürür.
-    Parameters:        
-        args: Her biri pd.Series olan değişken sayıda argüman alabilir
-    Returns:
-        pd.Series: argümanların aritmetik ortalaması
-    """
-    
-    number=len(args)
-    seri = pd.Series(data=sum(args)/number) 
-    seri=seri.reset_index(drop=True)
-    return seri
-#*****************************************************************************
