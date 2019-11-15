@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from src.base import (mark_data)
+import src.base as base
 
 def get_change(data):
     """Ardışık veriler arasındaki değişim miktarını hesaplar
@@ -26,7 +26,7 @@ def sign(pair):
     -------
     signed_data (pd.DataFrame)
     """
-    sign=mark_data(pair)
+    sign=base.mark_data(pair)
     return pd.concat([pair,sign],axis=1)
 
 def last_time(x):
@@ -34,3 +34,22 @@ def last_time(x):
     """
     x=x.reset_index()
     return x.iloc[-1].date
+
+def get_amplitude(change_of_pair):
+    """Bir change serisi alır. Amplitude ve duration'ı hesaplayarak döndürür.
+    Example
+    -------
+    >>> x=get_amplitude(change_of_6AU8_6BU8)    
+    >>> x.dtypes
+    Out[]:
+        6AU8_6BU8            float64   #amplitude
+        duration     timedelta64[ns]
+        date          datetime64[ns]
+        dtype: object
+    """
+    name=change_of_pair.name
+    temizle=base.clean_data(change_of_pair)
+    isaretle=sign(temizle)
+    r=isaretle.reset_index()
+    r['duration']=r.date.diff()
+    return r.groupby('sign').agg({name:'sum','duration':'sum','date':last_time})

@@ -30,9 +30,6 @@ def combine_date(time_series,date):
         date_list.append(pd.Timestamp.combine(date,time))
     return pd.Series(data=date_list)     
 
-
-
-
 def combine_df(frames,dates):
     """Farklı günlere ait veriler dataframe olarak birleştirir. Hiyerarşik index sağlar.
     Parameters:
@@ -46,24 +43,6 @@ def combine_df(frames,dates):
 
 
 
-def find_spread(a_series,b_series,values):
-    """6A ve 6B verisinden SPREAD verisini üretir.
-    Parameters:
-        mid_price(tuple):
-        values(dict): ticksize değerleri
-    Returns:
-        pd.Series: Hesaplanmış spread verisi
-    """
-    atick = values['a_PNLTICK']/values['a_TICKSIZE']
-    btick = values['b_PNLTICK']/values['b_TICKSIZE']
-    size = len(a_series)
-    spread = size*[0]
-    for i in range(size): 
-        try:
-            spread[i+1] = (((a_series.iat[i+1] - a_series.iat[i])*atick) - ((b_series.iat[i+1] - b_series.iat[i])*btick)) +spread[i] 
-        except:            
-            pass        
-    return pd.Series(data=spread,index=a_series.index,name='spread')
 
 
 def extract_product(df, product_name):
