@@ -1,14 +1,5 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[2]:
-
-
 import pandas as pd
 from datetime import time
-
-# In[ ]:
-
 
 def find_sign(value):
     """değişimin hangi yönde olduğunu kontrol eder
@@ -23,10 +14,6 @@ def find_sign(value):
         return -1
     else:
         return 0
-
-
-# In[ ]:
-
 
 def get_conditon(df_line, min_duration=None, min_amplitude=None):
     """Satırdaki verilerin, verilen koşulu sağlayıp sağlamadığını kontol eder.
@@ -47,10 +34,6 @@ def get_conditon(df_line, min_duration=None, min_amplitude=None):
             return True
         else:
             return False
-
-
-# In[3]:
-
 
 def _conditionally_scan(df,condition):
     """Bir dataframe'i verilen koşullara göre yeniden düzenler.
@@ -130,10 +113,6 @@ def _conditionally_scan(df,condition):
     new_df = pd.DataFrame({'duration':dlist,'amplitude':alist},index=time_list)
     return new_df
 
-
-# In[7]:
-
-
 def group_scan(df):
     """Medyana göre dalgaları yeniden düzenler
     Parameters:
@@ -151,7 +130,7 @@ def group_scan(df):
     combin_df = pd.concat(df_list,keys=main_index)
     return combin_df
 
-#%%
+
 def single_scan(df, condition = 'median',quantile_value=None):
     """Medyana göre dalgaları yeniden düzenler
     Parameters:
@@ -176,15 +155,15 @@ def single_scan(df, condition = 'median',quantile_value=None):
 
 
 #%%
-def divide_median(df):
-    """Veri, amplitude değeri 0'dan büyük olanlar ve 0'dan küçük olanlar olmak üzere 2'ye ayrılır.
-    2 parçanın, duration ve amplitude değerlerinin medyanı ayrı ayrı hesaplanır.
+    def divide_median(df):
+        """Veri, amplitude değeri 0'dan büyük olanlar ve 0'dan küçük olanlar olmak üzere 2'ye ayrılır.
+        2 parçanın, duration ve amplitude değerlerinin medyanı ayrı ayrı hesaplanır.
 
-    Returns
-    -------
-    dict : pozitif medyan ve negatif medyan olan 2 pandas.Series içerir.
-    """
-    return {'pozitive':df[df['amplitude']>0].median(),'negative':df[df['amplitude']<0].median()}
+        Returns
+        -------
+        dict : pozitif medyan ve negatif medyan olan 2 pandas.Series içerir.
+        """
+        return {'pozitive':df[df['amplitude']>0].median(),'negative':df[df['amplitude']<0].median()}
 
 
 #%%
