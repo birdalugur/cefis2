@@ -50,6 +50,7 @@ def to_series(df):
 
 
 def clean_data(pair):
+    
     """Bir serideki 0'ları ve nanları kaldırır
     Parameters
     ----------
