@@ -1,183 +1,123 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+
 import pandas as pd
-from datetime import time
+import numpy as np
+import src.change as change
 
-def find_sign(value):
-    """değişimin hangi yönde olduğunu kontrol eder
-    Parameters:
-        value (float) : amplitude değeri
-    Returns:
-        int: pozitif ise 1, negatif ise -1 aksi durumda 0 döndürür.
-    """
-    if value>0:
-        return 1
-    elif value<0:
-        return -1
-    else:
-        return 0
 
-def get_conditon(df_line, min_duration=None, min_amplitude=None):
-    """Satırdaki verilerin, verilen koşulu sağlayıp sağlamadığını kontol eder.
-    Parameters:
-        df_line (Series) : dataframe'e ait bir satır
-        min_duration (float) : geçerli sayılabilecek dur. değeri
-        min_amplitude (float) : geçerli sayılabilecek amp. boyutu
-    Returns:
-        boolean: koşul sağlanıyorsa True, sağlanmıyorsa False
-    """
-    if min_amplitude == None:
-        if df_line['duration'] <= min_duration:
-            return True
-        else:
-            return False
-    else:
-        if df_line['duration'] <= min_duration and abs(df_line['amplitude']) <= abs(min_amplitude):
-            return True
-        else:
-            return False
-
-def _conditionally_scan(df,condition):
-    """Bir dataframe'i verilen koşullara göre yeniden düzenler.
-    Parameters:
-        df (dataframe): pd.Dataframe nesnesi
-        min_dur (int): 
-        min_amp (float):
-    Returns:
-        pd.Dataframe:
-    Example:
-        min_duratin=1, min_amplitude=30 olarak verildiğini varsayalım. 3sn'lik ve -40 amp. sahip
-        negatif bir dalgayı takip eden, 1sn'lik ve amplitude değeri 25 olan pozitif bir dalga var ise,
-        bu dalgayı önceki dalgaya dahil eder yeni değer dur=4sn amp=-15 olur ve bir sonraki dalganın
-        koşulu sağlayıp sağlamadığını kontrol eder. Sağlanıyorsa aynı işlem devam eder. Sağlanmıyorsa veriler kaydedilerek
-        bir sonraki dalga için işlemler tekrar yapılır ve diğer dalga hesaplanır.
-    """
-    min_dur = None
-    min_amp=None
-    df=df[['duration','amplitude']].dropna()
-    index = 0
-    cout = 1
-    time_list  = []
-    dur_list =[]
-    amp_list = []     
-    dlist = []
-    alist=[]
-    first = True
-    second = True
-    while(cout<len(df)):
-        current_dur = df.iloc[index,:]['duration']        
-        current_amp = df.iloc[index,:]['amplitude']
-        current_sign = find_sign(current_amp)
-
-        if current_sign==1:
-            min_dur = condition['pozitive'].duration
-            min_amp = condition['pozitive'].amplitude
-        else:
-            min_dur = condition['negative'].duration
-            min_amp = condition['negative'].amplitude
-
-        second = True
-        while(second and cout<len(df)+1):
-            try:
-                next_sign = find_sign(df.iloc[cout,:]['amplitude'])
-
-                if (next_sign == current_sign) or next_sign == 0 :
-                    dur_list.append(df.iloc[cout,:]['duration'])
-                    amp_list.append(df.iloc[cout,:]['amplitude'])
-                    cout+=1
-                    
-                else:
-                    if get_conditon(df.iloc[cout,:],min_dur,min_amp):
-                        
-                        dur_list.append(df.iloc[cout,:]['duration'])
-                        amp_list.append(df.iloc[cout,:]['amplitude'])
-                        cout+=1
-                        
-                    else:
-                        dur_list.append(df.iloc[index,:]['duration'])
-                        amp_list.append(df.iloc[index,:]['amplitude'])
-                        index = cout
-                        time_list.append(df.index[cout-1])
-                        cout=cout+1
-                        dlist.append(sum(dur_list))
-                        alist.append(sum(amp_list))
-                        dur_list.clear()
-                        amp_list.clear()
-                        second = False
-            except:
-                dur_list.append(df.iloc[index,:]['duration'])
-                amp_list.append(df.iloc[index,:]['amplitude'])
-                dlist.append(sum(dur_list))
-                alist.append(sum(amp_list))
-                time_list.append(df.index[cout-1])
-                second = False
+class Sign:
+    def __init__(self,data,pn=True):
+        #__pn True ise pozitif ve negatif veriler ile ayrı çalışır.
+        self.__pn = pn       
         
-    new_df = pd.DataFrame({'duration':dlist,'amplitude':alist},index=time_list)
-    return new_df
-
-def group_scan(df):
-    """Medyana göre dalgaları yeniden düzenler
-    Parameters:
-        df(pd.Dataframe): medyan koşulu konularak yeniden düzenlenecek veri grubu
-    Returns:
-        pd.Dataframe: pd.concat([df,df..])
-    """
-    df_list = []
-    main_index = df.index.levels[0].tolist()    
-    for index in main_index:
-        current_df = df.loc[index]
-        current_medyan = divide(current_df)
-        df_list.append(_conditionally_scan(df=current_df,medyan=current_medyan))
         
-    combin_df = pd.concat(df_list,keys=main_index)
-    return combin_df
-
-
-def single_scan(df, condition = 'median',quantile_value=None):
-    """Medyana göre dalgaları yeniden düzenler
-    Parameters:
-        df(pd.Dataframe): koşula göre yeniden düzenlenecek veri.
-        condition(str): koşul türü. 'median' ya da 'percentile' olabilir. Default: 'median'.
-        quantile_value (float): Default: None. Yalnızca condition='percentile' ise kullanılır.
-    Returns:
-        pd.Dataframe: pd.concat([df,df..])
-
-    Example
-    -------
-    >>> single_scan(current,condition='percentile',quantile_value=0.25)
-    """
-
-    if condition == 'median':
-        medyan = divide_median(df)
-        return _conditionally_scan(df=df,condition=medyan)
-
-    elif condition == 'percentile':
-        percentile = divide_percentile(df,quantile_value)
-        return _conditionally_scan(df=df,condition=percentile)
-
-
-#%%
-    def divide_median(df):
-        """Veri, amplitude değeri 0'dan büyük olanlar ve 0'dan küçük olanlar olmak üzere 2'ye ayrılır.
-        2 parçanın, duration ve amplitude değerlerinin medyanı ayrı ayrı hesaplanır.
-
-        Returns
-        -------
-        dict : pozitif medyan ve negatif medyan olan 2 pandas.Series içerir.
+        #df'in sütunları alınıyor
+        try:
+            self.duration  = data['duration'].dt.seconds
+        except:
+            data.duration=pd.to_timedelta(data.duration.astype(str))
+            self.duration  = data['duration'].dt.seconds
+        
+        self.amplitude = data.iloc[:,-1]
+        self.date      = data['date']       
+        
+        #kullanılacak fonksiyonlar
+        self._median     = None
+        self._percentile = None
+        self._is_provide = None
+        
+        #fonksiyona göre atanacak koşul değerleri
+        self.duration_val    = None
+        self.amplitude_val   = None
+        self.duration_bools  = None
+        self.amplitude_bools = None
+        self.bools = None
+        
+        #pozitif-negatif durumuna göre atanacak fonksiyonlar
+        if self.__pn==False:
+            self._median     = self._direct_median
+            self._percentile = self._direct_percentile
+            self._is_provide = self._direct_is_provide
+        elif self.__pn == True:            
+            self._median     = self._pn_median
+            self._percentile = self._pn_percentile 
+            self._is_provide = self._pn_is_provide
+            
+                
+    def medyan(self):
+        """Medyan değerine göre verileri işaretler ve döndürür
         """
-        return {'pozitive':df[df['amplitude']>0].median(),'negative':df[df['amplitude']<0].median()}
+        self.duration_val  = self._median(self.duration)
+        self.amplitude_val = self._median(self.amplitude)
+        self.assign_bools()
+        print('duration= '+str(self.duration_val))
+        print('amplitude= '+str(self.amplitude_val))
+        return self.sign_data(self.amplitude,self.bools)
+        
+        
+    def percentile(self,percen_val):
+        """Percentile değerine göre veriyi işaretler ve döndürür
+        """
+        self.duration_val=self._percentile(self.duration,percen_val)
+        self.amplitude_val=self._percentile(self.amplitude,percen_val)
+        self.assign_bools()
+        print('duration= '+str(self.duration_val))
+        print('amplitude= '+str(self.amplitude_val))
+        return self.sign_data(self.amplitude,self.bools)
+        
+    def assign_bools(self):
+        self.duration_bools= self._get_bools(data=self.duration,val=self.duration_val)       
+        self.amplitude_bools= self._get_bools(self.amplitude,self.amplitude_val)
+        self.bools = self.duration_bools & self.amplitude_bools
+        
+    def _get_bools(self,data,val) -> pd.Series:
+        bools=data.apply(lambda x : self._is_provide(x,val))
+        bools[0]=False
+        return bools
+    
+    def _direct_is_provide(self,x,val):
+        return abs(x)<=val
+    
+    def _pn_is_provide(self,x,val):
+        if x <0:
+            return abs(x)<=val['negatif']
+        if x >0:
+            return abs(x)<=val['pozitif']
+    
+    #>>>>>>>>>>>>>>>medyan ve percentile fonksiyonları>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    def _pn_median(self,data) -> dict:
+        """Pozitif ve negatif'i ayrı hesaplar
+        """
+        return {'pozitif': data[data>0].median(),'negatif': data[data<0].median()}
+        
+        
+    def _direct_median(self,data):
+        return data.median()
+    
+    def _direct_percentile(self,data,percent_val):
+        return data.quantile(percent_val)
+        
+        
+    def _pn_percentile(self,data, percent_val) -> dict:
+        """Pozitif ve negatif'i ayrı hesaplar
+        """
+        return {'pozitif':
+            data[data>0].quantile(percent_val),\
+                'negatif':data[data<0].quantile(percent_val)}
+    #<<<<<<<<<<<<<<<<medyan ve percentile fonksiyonları<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    
+    def sign_data(self,data : pd.Series, bools : pd.Series) -> pd.Series:
+        a=data.mask(bools).fillna(method='ffill')
+        return np.sign(a).diff().ne(0).cumsum()
 
 
-#%%
-def divide_percentile(df,value):
-    """Veri, amplitude değeri 0'dan büyük olanlar ve 0'dan küçük olanlar olmak üzere 2'ye ayrılır.
-    2 parçanın, duration ve amplitude değerlerinin percentile'ı ayrı ayrı hesaplanır.
-
-    Parameters
-    ----------
-    df: pandas.DataFrame
-    value (float): Quantile değeri
-
-    Returns
-    -------
-    dict : pozitif percentile ve negatif percentile olan 2 pandas.Series içerir.
+def apply(data, sign):
+    """computes and returns the new wave according to the given signs.
     """
-    return {'pozitive':df[df['amplitude']>0].quantile(value),'negative':df[df['amplitude']<0].quantile(value)}
+    name = data.iloc[:,-1].name
+    print(name)
+    new_data=data.groupby(sign).agg({'date':change.last_time,'duration':'sum',name:'sum'})    
+    return new_data.reset_index(drop=True)
+

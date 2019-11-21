@@ -52,4 +52,4 @@ def get_amplitude(change_of_pair):
     isaretle=sign(temizle)
     r=isaretle.reset_index()
     r['duration']=r.date.diff()
-    return r.groupby('sign').agg({name:'sum','duration':'sum','date':last_time})
+    return r.groupby('sign').agg({'date':last_time,'duration':'sum',name:'sum'})
