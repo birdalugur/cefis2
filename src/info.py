@@ -1,5 +1,4 @@
 import pandas as pd
-import src.auxiliary_functions as aux
 from platform import system
 
 def __parse_path(path):

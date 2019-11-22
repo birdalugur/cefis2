@@ -117,6 +117,7 @@ def apply(data, sign):
     """computes and returns the new wave according to the given signs.
     """
     name = data.iloc[:,-1].name
+    print('PAIR: ',name)
     new_data=data.groupby(sign).agg({'date':change.last_time,'duration':'sum',name:'sum'})    
     return new_data.reset_index(drop=True)
 
