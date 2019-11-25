@@ -3,125 +3,21 @@ import numpy as np
 import pandas as pd
 
 
-class Interval:
+def get_frequency(df):
+    """frekansı hesaplar ve sıralı şekilde döndürür.
     """
-    Bu sınıf, verileri belirli aralıklara yerleştirmek için tasarlanmıştır.
-    Aralıklar oluşturulurken 2 ayrı yöntem kullanılır.
+    return df.groupby(df.columns.tolist()).size()\
+            .reset_index().rename(columns={0: 'frequency'}).sort_values('frequency',ascending =False)\
+                .reset_index(drop=True)
 
-    Parameters
-    ----------
 
-    range_method  : str 
-    aralık oluşturma yöntemi. 'interval' veya 'width' olabilir.            
+def joint_density(df):
+    new_df= get_frequency(df)
+    new_df['density'] = new_df['frequency']/new_df['frequency'].sum()
+    pivot = pd.pivot_table(new_df, values='density', index=['duration'], columns=new_df.iloc[:,1].name)
+    return pivot
 
-    Example
-    -------
-
-    >>> data = pd.read_excel("data.csv")
-
-    >>> range_creator = Interval(range_method='interval')
-
-    >>> data_of_range = range_creator.convert_range(data,100)
-
-    >>> second_creator = Interval(range_method='width')
-
-    >>> second_creator.convert_range(data,5)
-    """
-
-    def __init__(self, range_method):
-       
-        self.range_method = range_method
-
-        self.__first_range = None
-        self.__second_range = None                
-
-    def __intervals(self,series,value):
-        """Serinin, min ve max değeri arasında eşit aralıklı sayıları döndür.
-        """
-        min_s = series.min()-0.0000000001
-        max_s = series.max()
-        return np.linspace(min_s,max_s,value)
-
-    def __width(self,series,value):
-        min_s = series.min()-0.0000000000001
-        max_s = series.max()
-        return list(self.wrange(min_s,max_s,value))
-
-    def wrange(self,start, stop, step):
-        while True:
-            yield start
-            start = start + step
-            if start == stop:
-                break
-            elif start > stop:
-                yield stop
-                break
-
-    def __set_range(self,data,value):
-        """range_method'a göre aralığın nasıl oluşturulacağını belirler.
-
-        Parameters
-        ----------        
-        data : pandas.DataFrame        
-        
-        """
-        if self.range_method == 'interval':
-            self.__first_range = self.__intervals(data.duration,value)
-            self.__second_range = self.__intervals(data.amplitude,value)
-
-        elif self.range_method == 'width':
-            self.__first_range = self.__width(data.duration,value)
-            self.__second_range = self.__width(data.amplitude,value)
-
-        else:
-            raise ValueError('range_method: %s bulunamadı' %(self.range_method))
-
-    def convert_range(self,data,value = None):
-        """Bir DataFrame'e belirli aralık değerleri uygulayarak yeniden düzenler
-        ve düzenlenmiş halini döndürür.
-
-        Parameters
-        ----------
-
-        data: pandas.DataFrame
-            Düzenlenecek veri seti
-
-        value: int
-            range_method 'interval' ise aralık sayısını belirtir.
-            range_method 'width' ise her bir aralığın genişliğini belirtir.
-        
-        width: float, default: None
-            Her bir aralığın genişlik miktarı. Bu parametre yalnızca range_method 'width' ise kullanılabilir.
-
-        Returns
-        -------
-        pandas.DataFrame
-        """
-                   
-        self.__set_range(data, value)
-        
-        range_dur = pd.cut(x=data.duration, bins= self.__first_range)
-        range_amp = pd.cut(x=data.amplitude, bins= self.__second_range)
-        return pd.concat([range_dur,range_amp],axis=1)
-
-    def _get_current_range(self):
-        """Nesnenin, eksenlere göre varsayılan aralığını döndürür.
-
-        Notes
-        -----
-        Bu method ile ilgili gelecekte düzenleme yapılması gerekmektedir.
-
-        >>> obj = Density(data_of_6A_6B_U8)
-        >>> obj.get_current_range()
-        
-        | 0 | 1       | 2          | 3          | 4          | ... | 87  |
-        |---|---------|------------|------------|------------|-----|-----|
-        | 0 | 1.000   | 5.191919   | 9.383838   | 13.575758  | ... | 326 |
-        | 1 | -13.125 | -12.784091 | -12.443182 | -12.102273 | ... | 29  |
-        
-        """
-        return pd.DataFrame([self.__first_range,self.__second_range]).T
-
+    
 
 
 class Density:

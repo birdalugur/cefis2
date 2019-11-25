@@ -1,6 +1,7 @@
 from operator import attrgetter
 import pandas as pd
 from operator import attrgetter
+import numpy as np
 
 def __define_Timerange(duration,value,method):
     if method == 'width':
@@ -23,16 +24,16 @@ def set_range(data,value,method):
        method = 'size'  -> her bir aralık eşit büyüklükte @value adettir.
     """
     interval = __define_range(data=data,value=value,method=method)
-    return pd.cut(data,interval)
+    return pd.cut(data,interval).reset_index(drop=True)
 
 def set_timeRange(data,value,method):
     """method = 'width' -> her bir aralığın genişliği @value kadardır.
        method = 'size'  -> her bir aralık eşit büyüklükte @value adettir.
     """
     interval = __define_Timerange(duration=data,value=value,method=method)
-    return pd.cut(data,interval)
+    return pd.cut(data,interval).reset_index(drop=True)
 
-def get_right(x):
+def get_mid(x):
     """Aralığın sağ değerini döndürür
     """
-    return x.map(attrgetter('right'))
+    return x.map(attrgetter('mid'))
