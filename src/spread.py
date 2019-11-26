@@ -11,8 +11,8 @@ def get_spread(pair,values):
     """
     a_series=pair.iloc[:,1]
     b_series=pair.iloc[:,2]
-    atick = values['a_PNLTICK']/values['a_TICKSIZE']
-    btick = values['b_PNLTICK']/values['b_TICKSIZE']
+    atick = values.iloc[:,0].pnltick/values.iloc[:,0].ticksize
+    btick = values.iloc[:,1].pnltick/values.iloc[:,1].ticksize
     size = len(a_series)
     spread = size*[0]
     for i in range(size): 
@@ -21,3 +21,5 @@ def get_spread(pair,values):
         except:            
             pass
     return pd.Series(data=spread,index=pair.date,name=a_series.name+'_'+b_series.name)
+
+
