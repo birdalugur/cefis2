@@ -31,32 +31,44 @@ def __density(df):
     new_df['density'] = new_df['frequency']/new_df['frequency'].sum()
     return new_df.drop('frequency',axis=1)
 
-
-def density(df,freq):
-    if freq == 'default':
-        return __density(df)
-    elif (freq == 'd')or(freq=='h'):
-        return df.groupby(pd.Grouper(key='date',freq=freq)).apply(__density).droplevel(1)
-    pass
-
-
-def _vertical_total(df):
-    pivot = pd.pivot_table(df, values='density', index=['duration'], columns=df.iloc[:,1].name)
-    v_total = pivot.agg('sum')
-    return pivot/v_total
-
-def _horizontal_total(df):
-    pivot = pd.pivot_table(df, values='density', index=['duration'], columns=df.iloc[:,1].name)
-    h_total = pivot.agg('sum',axis=1)
-    return pivot.T/h_total
-
-def conditional_density(df,axis):
-    name = df.iloc[:,1].name
-    if axis =='y':
-        piv = _vertical_total(df)
-        return pd.melt(piv.reset_index(),id_vars='duration',value_vars=list(piv.columns[1:]))
-    elif axis == 'x':
-        piv = _horizontal_total(df)
-        return pd.melt(piv.reset_index(),id_vars=name,value_vars=list(piv.columns[1:]))
+def grupla(data,day=None,hour=None):
+    g=None
+    if (day != None) & (hour == None):
+        g=data.groupby(data.date.dt.floor(day).dt.day)
+    elif (day == None) & (hour != None):
+        g=data.groupby(data.date.dt.floor(hour).dt.hour)
+    elif (day != None) & (hour != None):
+        g=data.groupby([data.date.dt.floor(day).dt.day,data.date.dt.floor(hour).dt.hour])
     else:
-        pass
+        raise ValueError("geçersiz değerler")
+    print("Gruplara erişebilmek için kullanılacak anahtarlar : ",list(g.groups.keys()))
+    return g
+
+# def density(df,freq):
+#     if freq == 'default':
+#         return __density(df)
+#     elif (freq == 'd')or(freq=='h'):
+#         return df.groupby(pd.Grouper(key='date',freq=freq)).apply(__density).droplevel(1)
+#     pass
+
+
+# def _vertical_total(df):
+#     pivot = pd.pivot_table(df, values='density', index=['duration'], columns=df.iloc[:,1].name)
+#     v_total = pivot.agg('sum')
+#     return pivot/v_total
+
+# def _horizontal_total(df):
+#     pivot = pd.pivot_table(df, values='density', index=['duration'], columns=df.iloc[:,1].name)
+#     h_total = pivot.agg('sum',axis=1)
+#     return pivot.T/h_total
+
+# def conditional_density(df,axis):
+#     name = df.iloc[:,1].name
+#     if axis =='y':
+#         piv = _vertical_total(df)
+#         return pd.melt(piv.reset_index(),id_vars='duration',value_vars=list(piv.columns[1:]))
+#     elif axis == 'x':
+#         piv = _horizontal_total(df)
+#         return pd.melt(piv.reset_index(),id_vars=name,value_vars=list(piv.columns[1:]))
+#     else:
+#         pass
