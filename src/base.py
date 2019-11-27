@@ -1,12 +1,34 @@
 import pandas as pd
 import numpy as np
 
-def groupby_date_time(df):
+# def groupby_date_time(df):
+#     """DataFrame'i tarih ve saate göre gruplar
+#     """
+#     df=df.reset_index()
+#     df_group=df.groupby([df.date.dt.floor('d'),df.date.dt.hour])
+#     return df_group
+
+# def groupby_date_time(df,day,hour):
+#     """DataFrame'i tarih ve saate göre gruplar
+#     """
+#     df=df.reset_index()
+#     df_group=df.groupby([df.date.dt.floor(day).dt.day,df.date.dt.floor(hour).dt.hour])
+#     return df_group
+
+def groupby_date_time(data,day=None,hour=None):
     """DataFrame'i tarih ve saate göre gruplar
     """
-    df=df.reset_index()
-    df_group=df.groupby([df.date.dt.floor('d'),df.date.dt.hour])
-    return df_group
+    data=data.reset_index()
+    g=None
+    if (day != None) & (hour == None):
+        g=data.groupby(data.date.dt.floor(day).dt.day)
+    elif (day == None) & (hour != None):
+        g=data.groupby(data.date.dt.floor(hour).dt.hour)
+    elif (day != None) & (hour != None):
+        g=data.groupby([data.date.dt.floor(day).dt.day,data.date.dt.floor(hour).dt.hour])
+    else:
+        raise ValueError("geçersiz değerler")
+    return g
 
 
 def average_of_series(*args):
