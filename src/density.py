@@ -6,6 +6,7 @@ import pandas as pd
 def get_frequency(df):
     """frekansı hesaplar ve sıralı şekilde döndürür.
     """
+    df = df.set_index('date')
     return df.groupby(df.columns.tolist()).size()\
             .reset_index().rename(columns={0: 'frequency'}).sort_values('frequency',ascending =False)\
                 .reset_index(drop=True)
@@ -16,96 +17,46 @@ def joint_density(df):
     new_df['density'] = new_df['frequency']/new_df['frequency'].sum()
     pivot = pd.pivot_table(new_df, values='density', index=['duration'], columns=new_df.iloc[:,1].name)
     return pivot
-
     
 
-
-class Density:
-    def __init__(self, dataframe = None):
-        self.data = dataframe
-               
-
-    #----------ALL PROPERTIES----------------------------
-    @property
-    def frequency(self):
-        """ joint density ve frekansı içerir
-        """
-        return self.__get_frequency(self.data)
-
-    @property
-    def joint_density(self):
-        return self.__create_joint(self.frequency)
-
-    @property
-    def horizontal_total_of_joint(self):
-        return self.__horizontal_total(self.joint_density)
-
-    @property
-    def vertical_total_of_joint(self):
-        return self.__vertical_total(self.joint_density)
-    
-    #---------------------------------------------------
+def frequency(df,freq):
+    if freq == 'default':
+        return get_frequency(df)
+    else:
+        return df.groupby(pd.Grouper(key='date',freq=freq)).apply(get_frequency).droplevel(1)
 
 
-    def __get_frequency(self,data):
-        """Bir veri setindeki sayıların hangi sıklıkla yer aldığını döndürür.
-        """
-        df = data.groupby(data.columns.tolist()).size()\
-            .reset_index().rename(columns={0: 'frequency'})
-
-        df = self.__calculate_density(df)
-        return df
-
-    def __calculate_density(self, df):
-        """Marjinal density hesaplar ve yeni bir sütun olarak ekler.
-        """        
-        df['density'] = df['frequency']/df['frequency'].sum()
-        return df
-    
-    
-    def __create_joint(self,df):
-        """Bu method density, duration ve amplitude verileri içeren bir
-            DataFrame'in pivot tablosunu oluşturur. Tablo, aynı zamanda
-            density değerlerinin satır ve sütun toplamlarını da içerir.
-        """
-        
-        pivot = pd.pivot_table(df, values='density', index=['duration'], columns='amplitude')
-        return pivot
-
-    def __horizontal_total(self, joint_dens):
-        return joint_dens.agg('sum',axis=1)
-
-    def __vertical_total(self, joint_dens):
-        return joint_dens.agg('sum')
+def __density(df):
+    new_df= get_frequency(df)
+    new_df['density'] = new_df['frequency']/new_df['frequency'].sum()
+    return new_df.drop('frequency',axis=1)
 
 
-    def conditional_density(self, choice):
-        """Koşullu dağılımı döndürür
-        """
-
-        #dataclass yalnızca, veriyi farklı şekillerde göstermek için kullanıldı.
-        #sözlükde kullanılabilirdi
-        @dataclass
-        class Gosterim:
-            normal:pd.DataFrame #grafikte bu kullanılacak
-            pivot:pd.DataFrame
-
-        #conditional density/y
-        if choice == 'amplitude':
-            con_density_table = self.joint_density/self.vertical_total_of_joint
-            con_density = con_density_table.stack().to_frame('conditional_distribution').swaplevel(0,1).sort_index()          
-            return Gosterim(con_density,con_density_table)
-
-        #conditional density/x
-        elif choice == 'duration':
-            con_density_table = (self.joint_density.T/self.horizontal_total_of_joint).T
-            con_density = con_density_table.stack().to_frame('conditional_distribution').sort_index()
-            # con_density = con_density_table.stack().to_frame('conditional_distribution').swaplevel(0, 1, axis=0).sort_index()
-            return Gosterim(con_density,con_density_table)
-
-        else:
-            raise Exception(
-                "choice, 'duration' ya da 'amplitude' olarak ayarlanmalıdır'")
+def density(df,freq):
+    if freq == 'default':
+        return __density(df)
+    elif (freq == 'd')or(freq=='h'):
+        return df.groupby(pd.Grouper(key='date',freq=freq)).apply(__density).droplevel(1)
+    pass
 
 
+def _vertical_total(df):
+    pivot = pd.pivot_table(df, values='density', index=['duration'], columns=df.iloc[:,1].name)
+    v_total = pivot.agg('sum')
+    return pivot/v_total
 
+def _horizontal_total(df):
+    pivot = pd.pivot_table(df, values='density', index=['duration'], columns=df.iloc[:,1].name)
+    h_total = pivot.agg('sum',axis=1)
+    return pivot.T/h_total
+
+def conditional_density(df,axis):
+    name = df.iloc[:,1].name
+    if axis =='y':
+        piv = _vertical_total(df)
+        return pd.melt(piv.reset_index(),id_vars='duration',value_vars=list(piv.columns[1:]))
+    elif axis == 'x':
+        piv = _horizontal_total(df)
+        return pd.melt(piv.reset_index(),id_vars=name,value_vars=list(piv.columns[1:]))
+    else:
+        pass
